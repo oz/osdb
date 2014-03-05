@@ -1,3 +1,5 @@
+![travis](https://api.travis-ci.org/oz/osdb.png?branch=master)
+
 This is a Go client library for [OpenSubtitles](http://opensubtitles.org/).
 
 Install with `go get github.com/oz/osdb`
