@@ -2,25 +2,55 @@
 
 This is a Go client library for [OpenSubtitles](http://opensubtitles.org/).
 
-Install with `go get github.com/oz/osdb`
 
-Example usage:
+The API has not reached version `0.1` yet, and is therefore subject to
+change. Nonetheless, you are welcome to use and participate in the development.
+
+ * Install with `go get -d github.com/oz/osdb`,
+ * and `import "github.com/oz/osdb"` to use.
+
+# Examples
+
+## Hashing a file
 
 ```go
-package main
-
-import (
-	"github.com/oz/osdb"
-	"fmt"
-)
-
-func main() {
-	hash, err := osdb.Hash("somefile.avi")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("hash: %x\n", hash)
+hash, err := osdb.Hash("somefile.avi")
+if err != nil {
+	// ...
 }
+fmt.Println("hash: %x\n", hash)
+```
+
+## Searching subtitles (file based)
+
+```go
+path := "/path/to/movie.avi"
+languages := []string{"eng"}
+
+// Hash file, then search.
+res, err := osdb.FileSearch(path, languages)
+if err != nil {
+	// ...
+}
+
+for _, sub := range res {
+	fmt.Printf("Found %s subtitles file \"%s\" at %s\n",
+		sub.LanguageName, sub.SubFileName, sub.ZipDownloadLink)
+}
+```
+
+## Getting a user session token 
+
+By default, the library operates with the anonyous user. If you need to login
+with a specific account, use the following:
+
+```go
+token, err := osdb.Login("user", "password", "language")
+if err != nil {
+	// ...
+}
+osdb.Token = token // the library will now operate with this Token.
+
 ```
 
 # License
