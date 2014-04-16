@@ -29,9 +29,6 @@ var (
 	Client, _ = xmlrpc.NewClient(Server, nil)
 )
 
-type Result struct {
-}
-
 type Subtitle struct {
 	IDMovie            string `xmlrpc:"IDMovie"`
 	IDMovieImdb        string `xmlrpc:"IDMovieImdb"`
