@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mattn/go-xmlrpc"
+	"github.com/kolo/xmlrpc"
 )
 
 const (
@@ -26,9 +26,57 @@ const (
 var (
 	UserAgent = "SubDownloader 2.0.10" // FIXME register a user-agent, one day.
 	Token     = ""
+	Client, _ = xmlrpc.NewClient(Server, nil)
 )
 
 type Result struct {
+}
+
+type Subtitle struct {
+	IDMovie            string `xmlrpc:"IDMovie"`
+	IDMovieImdb        string `xmlrpc:"IDMovieImdb"`
+	IDSubMovieFile     string `xmlrpc:"IDSubMovieFile"`
+	IDSubtitle         string `xmlrpc:"IDSubtitle"`
+	IDSubtitleFile     string `xmlrpc:"IDSubtitleFile"`
+	ISO639             string `xmlrpc:"ISO639"`
+	LanguageName       string `xmlrpc:"LanguageName"`
+	MatchedBy          string `xmlrpc:"MatchedBy"`
+	MovieByteSize      string `xmlrpc:"MovieByteSize"`
+	MovieFPS           string `xmlrpc:"MovieFPS"`
+	MovieHash          string `xmlrpc:"MovieHash"`
+	MovieImdbRating    string `xmlrpc:"MovieImdbRating"`
+	MovieKind          string `xmlrpc:"MovieKind"`
+	MovieName          string `xmlrpc:"MovieName"`
+	MovieNameEng       string `xmlrpc:"MovieNameEng"`
+	MovieReleaseName   string `xmlrpc:"MovieReleaseName"`
+	MovieTimeMS        string `xmlrpc:"MovieTimeMS"`
+	MovieYear          string `xmlrpc:"MovieYear"`
+	QueryNumber        string `xmlrpc:"QueryNumber"`
+	SeriesEpisode      string `xmlrpc:"SeriesEpisode"`
+	SeriesIMDBParent   string `xmlrpc:"SeriesIMDBParent"`
+	SeriesSeason       string `xmlrpc:"SeriesSeason"`
+	SubActualCD        string `xmlrpc:"SubActualCD"`
+	SubAddDate         string `xmlrpc:"SubAddDate"`
+	SubAuthorComment   string `xmlrpc:"SubAuthorComment"`
+	SubBad             string `xmlrpc:"SubBad"`
+	SubComments        string `xmlrpc:"SubComments"`
+	SubDownloadLink    string `xmlrpc:"SubDownloadLink"`
+	SubDownloadsCnt    string `xmlrpc:"SubDownloadsCnt"`
+	SubFeatured        string `xmlrpc:"SubFeatured"`
+	SubFileName        string `xmlrpc:"SubFileName"`
+	SubFormat          string `xmlrpc:"SubFormat"`
+	SubHash            string `xmlrpc:"SubHash"`
+	SubHD              string `xmlrpc:"SubHD"`
+	SubHearingImpaired string `xmlrpc:"SubHearingImpaired"`
+	SubLanguageID      string `xmlrpc:"SubLanguageID"`
+	SubRating          string `xmlrpc:"SubRating"`
+	SubSize            string `xmlrpc:"SubSize"`
+	SubSumCD           string `xmlrpc:"SubSumCD"`
+	SubtitlesLink      string `xmlrpc:"SubtitlesLink"`
+	UserID             string `xmlrpc:"UserID"`
+	UserNickName       string `xmlrpc:"UserNickName"`
+	UserRank           string `xmlrpc:"UserRank"`
+	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
 }
 
 // Generate a OSDB hash for a file
@@ -73,7 +121,7 @@ func Hash(path string) (hash uint64, err error) {
 }
 
 // Search subtitles in `languages` for a file at `path`.
-func SearchForFile(path string, langs []string) ([]Result, error) {
+func FileSearch(path string, langs []string) ([]Subtitle, error) {
 	// Login anonymously if no token has been set yet.
 	if Token == "" {
 		tok, err := Login("", "", "")
@@ -83,6 +131,22 @@ func SearchForFile(path string, langs []string) ([]Result, error) {
 		}
 	}
 
+	// Query OSDB....
+	params, err := hashSearchParams(path, langs)
+	if err != nil {
+		return nil, err
+	}
+	res := struct {
+		Data []Subtitle `xmlrpc:"data"`
+	}{}
+	if err = Client.Call("SearchSubtitles", params, &res); err != nil {
+		return nil, err
+	}
+	return res.Data, nil
+}
+
+// Build query parameters for hash-based movie search.
+func hashSearchParams(path string, langs []string) (interface{}, error) {
 	// Get file size
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -90,65 +154,47 @@ func SearchForFile(path string, langs []string) ([]Result, error) {
 	}
 	size := fi.Size()
 
-	// Get file hash
+	//// Get file hash
 	h, err := Hash(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Query OSDB....
-	res, err := xmlrpc.Call(Server,
-		"SearchSubtitles",
-		Token,
-		[1]map[string]interface{}{ // go-xmlrpc panics on slices...
-			map[string]interface{}{
-				"moviehash":     fmt.Sprintf("%x", h),
-				"moviebytesize": size,
-				"sublanguageid": strings.Join(langs, ","),
-			},
-		},
-		map[string]int{"limit": SearchLimit},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return parseSearchResults(&res)
+	movies := []struct {
+		Hash  string `xmlrpc:"moviehash"`
+		Size  int64  `xmlrpc:"moviebytesize"`
+		Langs string `xmlrpc:"sublanguageid"`
+	}{{fmt.Sprintf("%x", h), size, strings.Join(langs, ",")}}
+
+	params := []interface{}{Token, movies}
+	return params, nil
 }
 
-// Untangle the XMLRPC mess, yay.
-func parseSearchResults(resp *interface{}) ([]Result, error) {
-	res := (*resp).(xmlrpc.Struct)
-	if res["status"] != SuccessStatus {
-		return nil, fmt.Errorf("Search error: %v", res["status"])
+// Login to the API, and return a session token.
+func Login(user string, pass string, lang string) (tok string, err error) {
+	args := []interface{}{user, pass, lang, UserAgent}
+	res := struct {
+		Status string `xmlrpc:"status"`
+		Token  string `xmlrpc:"token"`
+	}{}
+	if err = Client.Call("LogIn", args, &res); err != nil {
+		return
 	}
 
-	count := len(res["data"].(xmlrpc.Array))
-	results := make([]Result, count)
-
-	// FIXME debug mattn/go-xmlrpc, then
-	// FIXME build a slice of Result
-	//for _, raw := range res["data"].(xmlrpc.Struct) { }
-
-	return results, nil
-}
-
-// Login to the API. Return a token
-func Login(user string, pass string, lang string) (string, error) {
-	res, err := xmlrpc.Call(Server, "LogIn", user, pass, lang, UserAgent)
-	if err != nil {
-		return "", err
+	if res.Status != SuccessStatus {
+		return tok, fmt.Errorf("login error: %s", res.Status)
 	}
-	data := res.(xmlrpc.Struct)
-	if data["status"] != SuccessStatus {
-		return "", fmt.Errorf("login error: %s", data["status"])
-	}
-	return data["token"].(string), nil
+	tok = res.Token
+	return
 }
 
 // Logout
 func Logout(tok string) (err error) {
-	_, err = xmlrpc.Call(Server, "LogOut", tok)
-	return
+	args := []interface{}{tok}
+	res := struct {
+		Status string `xmlrpc:"status"`
+	}{}
+	return Client.Call("LogOut", args, &res)
 }
 
 // Read a chunk of a file at `offset` so as to fill `buf`.
