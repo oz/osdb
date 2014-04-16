@@ -144,27 +144,30 @@ func FileSearch(path string, langs []string) ([]Subtitle, error) {
 
 // Build query parameters for hash-based movie search.
 func hashSearchParams(path string, langs []string) (interface{}, error) {
-	// Get file size
+	// File size
 	fi, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 	size := fi.Size()
 
-	//// Get file hash
+	// File hash
 	h, err := Hash(path)
 	if err != nil {
 		return nil, err
 	}
-
-	movies := []struct {
-		Hash  string `xmlrpc:"moviehash"`
-		Size  int64  `xmlrpc:"moviebytesize"`
-		Langs string `xmlrpc:"sublanguageid"`
-	}{{fmt.Sprintf("%x", h), size, strings.Join(langs, ",")}}
-
-	params := []interface{}{Token, movies}
-	return params, nil
+	return []interface{}{
+		Token,
+		[]struct {
+			Hash  string `xmlrpc:"moviehash"`
+			Size  int64  `xmlrpc:"moviebytesize"`
+			Langs string `xmlrpc:"sublanguageid"`
+		}{{
+			fmt.Sprintf("%x", h),
+			size,
+			strings.Join(langs, ","),
+		}},
+	}, nil
 }
 
 // Login to the API, and return a session token.
