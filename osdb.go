@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	UserAgent = "OS Test User Agent" // FIXME register a user-agent, one day.
+	UserAgent = "OS Test User Agent" // OSDB's test agent
 	Token     = ""
 	Client, _ = xmlrpc.NewClient(Server, nil)
 )
@@ -119,13 +119,8 @@ func Hash(path string) (hash uint64, err error) {
 
 // Search subtitles in `languages` for a file at `path`.
 func FileSearch(path string, langs []string) ([]Subtitle, error) {
-	// Login anonymously if no token has been set yet.
-	if Token == "" {
-		tok, err := Login("", "", "")
-		Token = tok
-		if err != nil {
-			return nil, err
-		}
+	if err := ensureToken(); err != nil {
+		return nil, err
 	}
 
 	// Query OSDB....
@@ -206,5 +201,15 @@ func readChunk(file *os.File, offset int64, buf []byte) (err error) {
 	if n != ChunkSize {
 		return fmt.Errorf("Invalid read", n)
 	}
+	return
+}
+
+// Login anonymously if no Token has been set yet.
+func ensureToken() (err error) {
+	if Token != "" {
+		return
+	}
+	tok, err := Login("", "", "")
+	Token = tok
 	return
 }
