@@ -49,18 +49,18 @@ subs, err := osdb.FileSearch(...)
 
 // Download subtitle file, and write to disk using subs[0].SubFileName
 if err := subs[0].Download(); err != nil {
-	panic(err)
+	// ...
 }
 
 // Alternatively, use the filename of your choice:
 if err := subs[0].DownloadTo("safer-name.srt"); err != nil {
-	panic(err)
+	// ...
 }
 ```
 
 ## Getting a user session token 
 
-By default, the library operates with the anonyous user. If you need to login
+By default, the library operates with the anonymous user. If you need to login
 with a specific account, use the following:
 
 ```go
