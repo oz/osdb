@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	UserAgent = "SubDownloader 2.0.10" // FIXME register a user-agent, one day.
+	UserAgent = "OS Test User Agent" // FIXME register a user-agent, one day.
 	Token     = ""
 	Client, _ = xmlrpc.NewClient(Server, nil)
 )
