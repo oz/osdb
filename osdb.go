@@ -131,14 +131,14 @@ func FileSearch(path string, langs []string) ([]Subtitle, error) {
 	res := struct {
 		Data []Subtitle `xmlrpc:"data"`
 	}{}
-	if err = Client.Call("SearchSubtitles", params, &res); err != nil {
+	if err = Client.Call("SearchSubtitles", *params, &res); err != nil {
 		return nil, err
 	}
 	return res.Data, nil
 }
 
 // Build query parameters for hash-based movie search.
-func hashSearchParams(path string, langs []string) (interface{}, error) {
+func hashSearchParams(path string, langs []string) (*[]interface{}, error) {
 	// File size
 	fi, err := os.Stat(path)
 	if err != nil {
@@ -151,7 +151,7 @@ func hashSearchParams(path string, langs []string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []interface{}{
+	params := []interface{}{
 		Token,
 		[]struct {
 			Hash  string `xmlrpc:"moviehash"`
@@ -162,7 +162,8 @@ func hashSearchParams(path string, langs []string) (interface{}, error) {
 			size,
 			strings.Join(langs, ","),
 		}},
-	}, nil
+	}
+	return &params, nil
 }
 
 // Login to the API, and return a session token.
