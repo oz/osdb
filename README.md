@@ -3,8 +3,8 @@
 This is a Go client library for [OpenSubtitles](http://opensubtitles.org/).
 
 
-The API has not reached version `0.1` yet, and is therefore subject to
-change. Nonetheless, you are welcome to use and participate in the development.
+The API has not reached version `0.1` yet, and is therefore subject to change.
+Nonetheless, you are welcome to check it out, or participate.
 
  * Install with `go get -d github.com/oz/osdb`,
  * and `import "github.com/oz/osdb"` to use.
@@ -36,6 +36,25 @@ if err != nil {
 for _, sub := range res {
 	fmt.Printf("Found %s subtitles file \"%s\" at %s\n",
 		sub.LanguageName, sub.SubFileName, sub.ZipDownloadLink)
+}
+```
+
+## Downloading subtitles
+
+Let's say you just made a search, for example using `osdb.FileSearch()`, and as
+the API provided a few results, you decide to pick one for download:
+
+```go
+subs, err := osdb.FileSearch(...)
+
+// Download subtitle file, and write to disk using subs[0].SubFileName
+if err := subs[0].Download(); err != nil {
+	panic(err)
+}
+
+// Alternatively, use the filename of your choice:
+if err := subs[0].DownloadTo("safer-name.srt"); err != nil {
+	panic(err)
 }
 ```
 

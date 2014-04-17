@@ -8,9 +8,13 @@ package osdb
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/kolo/xmlrpc"
@@ -76,7 +80,63 @@ type Subtitle struct {
 	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
 }
 
-// Generate a OSDB hash for a file
+// Save subtitle file to disk, using the OSDB specified name.
+func (s *Subtitle) Download() error {
+	return s.DownloadTo(s.SubFileName)
+}
+
+// Save subtitle file to disk, using the specified path.
+func (s *Subtitle) DownloadTo(path string) (err error) {
+	id, err := strconv.Atoi(s.IDSubtitleFile)
+	if err != nil {
+		return
+	}
+
+	// Download
+	files, err := DownloadSubtitles([]int{id})
+	if err != nil {
+		return err
+	}
+	if len(files) == 0 {
+		return fmt.Errorf("No file match this subtitle ID")
+	}
+
+	// Save to disk.
+	sf := files[0]
+	r, err := sf.Reader()
+	if err != nil {
+		return
+	}
+	w, err := os.Create(path)
+	if err != nil {
+		return
+	}
+	_, err = io.Copy(w, r)
+	w.Close()
+	return
+}
+
+// SubtitleFile contains file data as returned by OSDB's API, that is to
+// say: gzip-ped and base64-encoded text.
+type SubtitleFile struct {
+	Id     string `xmlrpc:"idsubtitlefile"`
+	Data   string `xmlrpc:"data"`
+	reader *gzip.Reader
+}
+
+// A Reader for the subtitle file contents (decoded, and decompressed).
+func (sf *SubtitleFile) Reader() (r *gzip.Reader, err error) {
+	if sf.reader != nil {
+		return sf.reader, err
+	}
+
+	dec := base64.NewDecoder(base64.StdEncoding, strings.NewReader(sf.Data))
+	sf.reader, err = gzip.NewReader(dec)
+
+	return sf.reader, err
+}
+
+// Generate a OSDB hash for a file.
 func Hash(path string) (hash uint64, err error) {
 	// Check file size.
 	fi, err := os.Stat(path)
@@ -137,33 +197,21 @@ func FileSearch(path string, langs []string) ([]Subtitle, error) {
 	return res.Data, nil
 }
 
-// Build query parameters for hash-based movie search.
-func hashSearchParams(path string, langs []string) (*[]interface{}, error) {
-	// File size
-	fi, err := os.Stat(path)
-	if err != nil {
+// Download subtitles by file ID.
+func DownloadSubtitles(ids []int) ([]SubtitleFile, error) {
+	if err := ensureToken(); err != nil {
 		return nil, err
 	}
-	size := fi.Size()
+	params := []interface{}{Token, ids}
+	res := struct {
+		Status string         `xmlrpc:"status"`
+		Data   []SubtitleFile `xmlrpc:"data"`
+	}{}
+	if err := Client.Call("DownloadSubtitles", params, &res); err != nil {
+		return nil, err
+	}
 
-	// File hash
-	h, err := Hash(path)
-	if err != nil {
-		return nil, err
-	}
-	params := []interface{}{
-		Token,
-		[]struct {
-			Hash  string `xmlrpc:"moviehash"`
-			Size  int64  `xmlrpc:"moviebytesize"`
-			Langs string `xmlrpc:"sublanguageid"`
-		}{{
-			fmt.Sprintf("%x", h),
-			size,
-			strings.Join(langs, ","),
-		}},
-	}
-	return &params, nil
+	return res.Data, nil
 }
 
 // Login to the API, and return a session token.
@@ -184,7 +232,7 @@ func Login(user string, pass string, lang string) (tok string, err error) {
 	return
 }
 
-// Logout
+// Logout...
 func Logout(tok string) (err error) {
 	args := []interface{}{tok}
 	res := struct {
@@ -213,4 +261,33 @@ func ensureToken() (err error) {
 	tok, err := Login("", "", "")
 	Token = tok
 	return
+}
+
+// Build query parameters for hash-based movie search.
+func hashSearchParams(path string, langs []string) (*[]interface{}, error) {
+	// File size
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	size := fi.Size()
+
+	// File hash
+	h, err := Hash(path)
+	if err != nil {
+		return nil, err
+	}
+	params := []interface{}{
+		Token,
+		[]struct {
+			Hash  string `xmlrpc:"moviehash"`
+			Size  int64  `xmlrpc:"moviebytesize"`
+			Langs string `xmlrpc:"sublanguageid"`
+		}{{
+			fmt.Sprintf("%x", h),
+			size,
+			strings.Join(langs, ","),
+		}},
+	}
+	return &params, nil
 }
