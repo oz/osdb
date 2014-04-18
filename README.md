@@ -112,7 +112,7 @@ if err := c.DownloadTo(&subs[0], "safer-name.srt"); err != nil {
 
 ## Hashing a file
 
-OSDB use a custom hash to identify movie files.
+OSDB uses a custom hash to identify movie files.
 
 ```go
 hash, err := osdb.Hash("somefile.avi")
