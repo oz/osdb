@@ -8,132 +8,28 @@ package osdb
 
 import (
 	"bytes"
-	"compress/gzip"
-	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/kolo/xmlrpc"
 )
 
 const (
-	ChunkSize     = 65536 // 64k
-	Server        = "http://api.opensubtitles.org/xml-rpc"
-	SearchLimit   = 100
-	SuccessStatus = "200 OK"
+	ChunkSize = 65536 // 64k
 )
 
-var (
-	UserAgent = "OS Test User Agent" // OSDB's test agent
-	Token     = ""
-	Client, _ = xmlrpc.NewClient(Server, nil)
-)
-
-type Subtitle struct {
-	IDMovie            string `xmlrpc:"IDMovie"`
-	IDMovieImdb        string `xmlrpc:"IDMovieImdb"`
-	IDSubMovieFile     string `xmlrpc:"IDSubMovieFile"`
-	IDSubtitle         string `xmlrpc:"IDSubtitle"`
-	IDSubtitleFile     string `xmlrpc:"IDSubtitleFile"`
-	ISO639             string `xmlrpc:"ISO639"`
-	LanguageName       string `xmlrpc:"LanguageName"`
-	MatchedBy          string `xmlrpc:"MatchedBy"`
-	MovieByteSize      string `xmlrpc:"MovieByteSize"`
-	MovieFPS           string `xmlrpc:"MovieFPS"`
-	MovieHash          string `xmlrpc:"MovieHash"`
-	MovieImdbRating    string `xmlrpc:"MovieImdbRating"`
-	MovieKind          string `xmlrpc:"MovieKind"`
-	MovieName          string `xmlrpc:"MovieName"`
-	MovieNameEng       string `xmlrpc:"MovieNameEng"`
-	MovieReleaseName   string `xmlrpc:"MovieReleaseName"`
-	MovieTimeMS        string `xmlrpc:"MovieTimeMS"`
-	MovieYear          string `xmlrpc:"MovieYear"`
-	QueryNumber        string `xmlrpc:"QueryNumber"`
-	SeriesEpisode      string `xmlrpc:"SeriesEpisode"`
-	SeriesIMDBParent   string `xmlrpc:"SeriesIMDBParent"`
-	SeriesSeason       string `xmlrpc:"SeriesSeason"`
-	SubActualCD        string `xmlrpc:"SubActualCD"`
-	SubAddDate         string `xmlrpc:"SubAddDate"`
-	SubAuthorComment   string `xmlrpc:"SubAuthorComment"`
-	SubBad             string `xmlrpc:"SubBad"`
-	SubComments        string `xmlrpc:"SubComments"`
-	SubDownloadLink    string `xmlrpc:"SubDownloadLink"`
-	SubDownloadsCnt    string `xmlrpc:"SubDownloadsCnt"`
-	SubFeatured        string `xmlrpc:"SubFeatured"`
-	SubFileName        string `xmlrpc:"SubFileName"`
-	SubFormat          string `xmlrpc:"SubFormat"`
-	SubHash            string `xmlrpc:"SubHash"`
-	SubHD              string `xmlrpc:"SubHD"`
-	SubHearingImpaired string `xmlrpc:"SubHearingImpaired"`
-	SubLanguageID      string `xmlrpc:"SubLanguageID"`
-	SubRating          string `xmlrpc:"SubRating"`
-	SubSize            string `xmlrpc:"SubSize"`
-	SubSumCD           string `xmlrpc:"SubSumCD"`
-	SubtitlesLink      string `xmlrpc:"SubtitlesLink"`
-	UserID             string `xmlrpc:"UserID"`
-	UserNickName       string `xmlrpc:"UserNickName"`
-	UserRank           string `xmlrpc:"UserRank"`
-	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
-}
-
-// Save subtitle file to disk, using the OSDB specified name.
-func (s *Subtitle) Download() error {
-	return s.DownloadTo(s.SubFileName)
-}
-
-// Save subtitle file to disk, using the specified path.
-func (s *Subtitle) DownloadTo(path string) (err error) {
-	id, err := strconv.Atoi(s.IDSubtitleFile)
+// Allocate a new OSDB client
+func NewClient() (*Client, error) {
+	rpc, err := xmlrpc.NewClient(OSDBServer, nil)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	// Download
-	files, err := DownloadSubtitles([]int{id})
-	if err != nil {
-		return err
-	}
-	if len(files) == 0 {
-		return fmt.Errorf("No file match this subtitle ID")
-	}
+	c := &Client{UserAgent: DefaultUserAgent}
+	c.Client = rpc // xmlrpc.Client
 
-	// Save to disk.
-	sf := files[0]
-	r, err := sf.Reader()
-	if err != nil {
-		return
-	}
-	w, err := os.Create(path)
-	if err != nil {
-		return
-	}
-	_, err = io.Copy(w, r)
-	w.Close()
-	return
-}
-
-// SubtitleFile contains file data as returned by OSDB's API, that is to
-// say: gzip-ped and base64-encoded text.
-type SubtitleFile struct {
-	Id     string `xmlrpc:"idsubtitlefile"`
-	Data   string `xmlrpc:"data"`
-	reader *gzip.Reader
-}
-
-// A Reader for the subtitle file contents (decoded, and decompressed).
-func (sf *SubtitleFile) Reader() (r *gzip.Reader, err error) {
-	if sf.reader != nil {
-		return sf.reader, err
-	}
-
-	dec := base64.NewDecoder(base64.StdEncoding, strings.NewReader(sf.Data))
-	sf.reader, err = gzip.NewReader(dec)
-
-	return sf.reader, err
+	return c, nil
 }
 
 // Generate a OSDB hash for a file.
@@ -177,70 +73,6 @@ func Hash(path string) (hash uint64, err error) {
 	return hash + uint64(fi.Size()), nil
 }
 
-// Search subtitles in `languages` for a file at `path`.
-func FileSearch(path string, langs []string) ([]Subtitle, error) {
-	if err := ensureToken(); err != nil {
-		return nil, err
-	}
-
-	// Query OSDB....
-	params, err := hashSearchParams(path, langs)
-	if err != nil {
-		return nil, err
-	}
-	res := struct {
-		Data []Subtitle `xmlrpc:"data"`
-	}{}
-	if err = Client.Call("SearchSubtitles", *params, &res); err != nil {
-		return nil, err
-	}
-	return res.Data, nil
-}
-
-// Download subtitles by file ID.
-func DownloadSubtitles(ids []int) ([]SubtitleFile, error) {
-	if err := ensureToken(); err != nil {
-		return nil, err
-	}
-	params := []interface{}{Token, ids}
-	res := struct {
-		Status string         `xmlrpc:"status"`
-		Data   []SubtitleFile `xmlrpc:"data"`
-	}{}
-	if err := Client.Call("DownloadSubtitles", params, &res); err != nil {
-		return nil, err
-	}
-
-	return res.Data, nil
-}
-
-// Login to the API, and return a session token.
-func Login(user string, pass string, lang string) (tok string, err error) {
-	args := []interface{}{user, pass, lang, UserAgent}
-	res := struct {
-		Status string `xmlrpc:"status"`
-		Token  string `xmlrpc:"token"`
-	}{}
-	if err = Client.Call("LogIn", args, &res); err != nil {
-		return
-	}
-
-	if res.Status != SuccessStatus {
-		return tok, fmt.Errorf("login error: %s", res.Status)
-	}
-	tok = res.Token
-	return
-}
-
-// Logout...
-func Logout(tok string) (err error) {
-	args := []interface{}{tok}
-	res := struct {
-		Status string `xmlrpc:"status"`
-	}{}
-	return Client.Call("LogOut", args, &res)
-}
-
 // Read a chunk of a file at `offset` so as to fill `buf`.
 func readChunk(file *os.File, offset int64, buf []byte) (err error) {
 	n, err := file.ReadAt(buf, offset)
@@ -251,43 +83,4 @@ func readChunk(file *os.File, offset int64, buf []byte) (err error) {
 		return fmt.Errorf("Invalid read", n)
 	}
 	return
-}
-
-// Login anonymously if no Token has been set yet.
-func ensureToken() (err error) {
-	if Token != "" {
-		return
-	}
-	tok, err := Login("", "", "")
-	Token = tok
-	return
-}
-
-// Build query parameters for hash-based movie search.
-func hashSearchParams(path string, langs []string) (*[]interface{}, error) {
-	// File size
-	fi, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-	size := fi.Size()
-
-	// File hash
-	h, err := Hash(path)
-	if err != nil {
-		return nil, err
-	}
-	params := []interface{}{
-		Token,
-		[]struct {
-			Hash  string `xmlrpc:"moviehash"`
-			Size  int64  `xmlrpc:"moviebytesize"`
-			Langs string `xmlrpc:"sublanguageid"`
-		}{{
-			fmt.Sprintf("%x", h),
-			size,
-			strings.Join(langs, ","),
-		}},
-	}
-	return &params, nil
 }

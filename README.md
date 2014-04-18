@@ -2,10 +2,14 @@
 
 This is a Go client library for [OpenSubtitles](http://opensubtitles.org/).
 
+The generated documentation for this package is available at:
+http://godoc.org/github.com/oz/osdb
 
 This lib has not reached version `0.1` yet, and its API will change in many
 breaking ways.  But of course, you are welcome to check it out, and
 participate. :)
+
+# Getting started...
 
 To get started...
 
@@ -13,30 +17,70 @@ To get started...
  * import `"github.com/oz/osdb"`,
  * and try some of the examples.
 
-# Examples
-
-## Hashing a file
+To use OpenSubtitles' API you need to allocate a client, and to login (even
+anonymously) in order to receive a session token. Here is an example:
 
 ```go
-hash, err := osdb.Hash("somefile.avi")
+package main
+
+import "github.com/oz/osdb"
+
+func main() {
+	c, err := osdb.NewClient()
+	if err != nil {
+		// ...
+	}
+
+	// Anonymous login will set c.Token when successful
+	if err = c.LogIn("", "", ""); err != nil {
+		// ...
+	}
+
+	// etc.
+}
+
+```
+
+# Basic examples
+
+## Getting a user session token 
+
+Although this library tries to be simple, to use OpenSubtitles' API you need to
+login first so as to receive a session token: without it you will not be able
+to call any API method.
+
+```go
+c, err := osdb.NewClient()
 if err != nil {
 	// ...
 }
-fmt.Println("hash: %x\n", hash)
+
+err := c.LogIn("user", "password", "language")
+if err != nil {
+	// ...
+}
+// c.Token is now set.
+```
+
+However, you do not need to register a user, to login anonymously, just leave
+the `user` and `password` parameters blank:
+
+```go
+c.LogIn("", "", "")
 ```
 
 ## Searching subtitles
 
 Subtitle search is (for now) entirely file based: you can not yet search by
-movie name, or using an IMDB ID. So, in order to search subtitles, you must
+movie name, or using an IMDB ID. So, in order to search subtitles, you *must*
 have a movie file for the which we compute a hash, then used to search OSDB.
 
 ```go
 path := "/path/to/movie.avi"
 languages := []string{"eng"}
 
-// Compute file hash, and use it to search...
-res, err := osdb.FileSearch(path, languages)
+// Hash movie file, and search...
+res, err := client.FileSearch(path, languages)
 if err != nil {
 	// ...
 }
@@ -49,51 +93,52 @@ for _, sub := range res {
 
 ## Downloading subtitles
 
-Let's say you have just made a search, for example using `osdb.FileSearch()`,
-and as the API provided a few results, you decide to pick one for download:
+Let's say you have just made a search, for example using `FileSearch()`, and as
+the API provided a few results, you decide to pick one for download:
 
 ```go
-subs, err := osdb.FileSearch(...)
+subs, err := c.FileSearch(...)
 
 // Download subtitle file, and write to disk using subs[0].SubFileName
-if err := subs[0].Download(); err != nil {
+if err := c.Download(&subs[0]); err != nil {
 	// ...
 }
 
 // Alternatively, use the filename of your choice:
-if err := subs[0].DownloadTo("safer-name.srt"); err != nil {
+if err := c.DownloadTo(&subs[0], "safer-name.srt"); err != nil {
 	// ...
 }
 ```
 
-## Getting a user session token 
+## Hashing a file
 
-By default, the library operates with the anonymous user. If you ever need to
-login with a specific account, use the following:
+OSDB use a custom hash to identify movie files.
 
 ```go
-token, err := osdb.Login("user", "password", "language")
+hash, err := osdb.Hash("somefile.avi")
 if err != nil {
 	// ...
 }
-osdb.Token = token // the library will now operate with this Token.
-
+fmt.Println("hash: %x\n", hash)
 ```
 
-# Documentation
 
-The generated documentation for this package is available at:
-http://godoc.org/github.com/oz/osdb
+# On user agents...
 
 If you have read OSDB's [developer documentation][osdb], you should notice that
 you need to register an "official" user agent in order to use their API (meh).
-By default this library uses their "test" agent: it is fine for tests, but it
-is probably not what you would use in production. For registered applications,
-change the `UserAgent` variable with:
+By default this library uses their "test" agent: fine for tests, but it is
+probably not what you would use in production. For registered applications, you
+can change the `UserAgent` variable with:
 
 ```go
-osdb.UserAgent = "My totally official agent"
+c, err := osdb.NewClient()
+if err != nil {
+	// ...
+}
+c.UserAgent = "My custom user agent"
 ```
+
 
 # License
 
