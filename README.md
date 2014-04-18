@@ -110,6 +110,35 @@ if err := c.DownloadTo(&subs[0], "safer-name.srt"); err != nil {
 }
 ```
 
+## Checking if a subtitle exists
+
+Before trying to upload an allegedly "new" subtitles file to OSDB, you should
+always check whether they already have it.
+
+As some movies fit on more than one "CD" (remember those?), you will need to
+create a slice of `Subtitle`, one per subtitle file:
+
+```go
+subs := []osdb.Subtitle{
+		{
+			SubHash:       subHash,       // md5 hash of subtitle file
+			SubFileName:   subFileName,
+			MovieHash:     movieHash,     // see osdb.Hash()
+			MovieByteSize: movieByteSize, // careful, it's a string...
+			MovieFileName: movieFileName,
+		},
+}
+```
+
+Then simply feed that to `HasSubtitles`, and you'll be done.
+
+```go
+found, err := c.HasSubtitles(subs)
+if err != nil {
+	// ...
+}
+```
+
 ## Hashing a file
 
 OSDB uses a custom hash to identify movie files.
