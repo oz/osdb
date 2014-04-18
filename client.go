@@ -100,8 +100,15 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 // Checks wether a subtitle already exists in OSDB. The mandatory fields
 // in the received Subtitle map are: subhash, subfilename, moviehash,
 // moviebytesize, and moviefilename.
-func (c *Client) HasSubtitles(subs map[string]Subtitle) (bool, error) {
-	args := []interface{}{c.Token, &subs}
+func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
+	// Convert subs param to map[string]Subtitle, because OSDb.
+	subMap := map[string]Subtitle{}
+	for i, s := range subs {
+		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
+		subMap[key] = s
+	}
+
+	args := []interface{}{c.Token, &subMap}
 	res := struct {
 		Status string     `xmlrpc:"status"`
 		Exists bool       `xmlrpc:"alreadyindb"`
@@ -110,6 +117,7 @@ func (c *Client) HasSubtitles(subs map[string]Subtitle) (bool, error) {
 	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
 		return false, err
 	}
+
 	return res.Exists, nil
 }
 
