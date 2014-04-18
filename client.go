@@ -97,6 +97,22 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	return
 }
 
+// Checks wether a subtitle already exists in OSDB. The mandatory fields
+// in the received Subtitle map are: subhash, subfilename, moviehash,
+// moviebytesize, and moviefilename.
+func (c *Client) HasSubtitles(subs map[string]Subtitle) (bool, error) {
+	args := []interface{}{c.Token, &subs}
+	res := struct {
+		Status string     `xmlrpc:"status"`
+		Exists bool       `xmlrpc:"alreadyindb"`
+		Data   []Subtitle `xmlrpc:"data"`
+	}{}
+	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
+		return false, err
+	}
+	return res.Exists, nil
+}
+
 // Login to the API, and return a session token.
 func (c *Client) LogIn(user string, pass string, lang string) (err error) {
 	c.Login = user

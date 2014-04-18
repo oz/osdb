@@ -26,6 +26,7 @@ type Subtitle struct {
 	MovieReleaseName   string `xmlrpc:"MovieReleaseName"`
 	MovieTimeMS        string `xmlrpc:"MovieTimeMS"`
 	MovieYear          string `xmlrpc:"MovieYear"`
+	MovieFileName      string `xmlrpc:"MovieName"`
 	QueryNumber        string `xmlrpc:"QueryNumber"`
 	SeriesEpisode      string `xmlrpc:"SeriesEpisode"`
 	SeriesIMDBParent   string `xmlrpc:"SeriesIMDBParent"`
