@@ -26,8 +26,10 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
-	c := &Client{UserAgent: DefaultUserAgent}
-	c.Client = rpc // xmlrpc.Client
+	c := &Client{
+		UserAgent: DefaultUserAgent,
+		Client:    rpc, // xmlrpc.Client
+	}
 
 	return c, nil
 }
