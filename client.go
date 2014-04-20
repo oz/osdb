@@ -101,24 +101,20 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 // in the received Subtitle map are: subhash, subfilename, moviehash,
 // moviebytesize, and moviefilename.
 func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
-	// Convert subs param to map[string]Subtitle, because OSDb.
-	subMap := map[string]Subtitle{}
-	for i, s := range subs {
-		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
-		subMap[key] = s
-	}
-
-	args := []interface{}{c.Token, &subMap}
+	args := c.hasSubtitlesParams(subs)
 	res := struct {
-		Status string     `xmlrpc:"status"`
-		Exists bool       `xmlrpc:"alreadyindb"`
-		Data   []Subtitle `xmlrpc:"data"`
+		Status string   `xmlrpc:"status"`
+		Exists int      `xmlrpc:"alreadyindb"`
+		Data   Subtitle `xmlrpc:"data"`
 	}{}
 	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
 		return false, err
 	}
+	if res.Status != SuccessStatus {
+		return false, fmt.Errorf("HasSubtitles error: %s", res.Status)
+	}
 
-	return res.Exists, nil
+	return res.Exists == 1, nil
 }
 
 // Login to the API, and return a session token.
@@ -178,4 +174,29 @@ func (c *Client) hashSearchParams(path string, langs []string) (*[]interface{}, 
 		}},
 	}
 	return &params, nil
+}
+
+// Query parameters for TryUploadSubtitles
+func (c *Client) hasSubtitlesParams(subs []Subtitle) []interface{} {
+	// Convert subs param to map[string]struct{...}, because OSDb.
+	subMap := map[string]interface{}{}
+	for i, s := range subs {
+		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
+		param := struct {
+			SubHash       string `xmlrpc:"subhash"`
+			SubFileName   string `xmlrpc:"subfilename"`
+			MovieHash     string `xmlrpc:"moviehash"`
+			MovieByteSize string `xmlrpc:"moviebytesize"`
+			MovieFileName string `xmlrpc:"moviefilename"`
+		}{
+			s.SubHash,
+			s.SubFileName,
+			s.MovieHash,
+			s.MovieByteSize,
+			s.MovieFileName,
+		}
+		subMap[key] = param
+	}
+
+	return []interface{}{c.Token, subMap}
 }
