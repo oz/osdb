@@ -14,7 +14,7 @@ const (
 	OSDBServer       = "http://api.opensubtitles.org/xml-rpc"
 	DefaultUserAgent = "OS Test User Agent" // OSDB's test agent
 	SearchLimit      = 100
-	SuccessStatus    = "200 OK"
+	StatusSuccess    = "200 OK"
 )
 
 type Client struct {
@@ -110,7 +110,7 @@ func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
 	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
 		return false, err
 	}
-	if res.Status != SuccessStatus {
+	if res.Status != StatusSuccess {
 		return false, fmt.Errorf("HasSubtitles error: %s", res.Status)
 	}
 
@@ -131,7 +131,7 @@ func (c *Client) LogIn(user string, pass string, lang string) (err error) {
 		return
 	}
 
-	if res.Status != SuccessStatus {
+	if res.Status != StatusSuccess {
 		return fmt.Errorf("login error: %s", res.Status)
 	}
 	c.Token = res.Token
