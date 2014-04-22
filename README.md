@@ -170,7 +170,7 @@ c.UserAgent = "My custom user agent"
 
 # TODO
 
-API coverage:
+[Full API coverage][apidocs]:
 
   - :ballot_box_with_check: LogIn
   - :ballot_box_with_check: LogOut
@@ -201,3 +201,4 @@ API coverage:
 BSD, see the LICENSE file.
 
 [osdb]: http://trac.opensubtitles.org/projects/opensubtitles
+[apidocs]: http://trac.opensubtitles.org/projects/opensubtitles/wiki/XmlRpcIntro#XML-RPCmethods
