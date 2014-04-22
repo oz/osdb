@@ -168,6 +168,33 @@ if err != nil {
 c.UserAgent = "My custom user agent"
 ```
 
+# TODO
+
+API coverage:
+
+  - [x] LogIn
+  - [x] LogOut
+  - [x] NoOperation
+  - [x] SearchSubtitles by hash
+  - [ ] SearchSubtitles by IMDB ID
+  - [ ] SearchToMail
+  - [x] DownloadSubtitles
+  - [x] TryUploadSubtitles
+  - [ ] UploadSubtitles
+  - [ ] SearchMoviesOnIMDB
+  - [ ] GetIMDBMovieDetails
+  - [ ] InsertMovie
+  - [ ] ServerInfo
+  - [ ] ReportWrongMovieHash
+  - [ ] SubtitlesVote
+  - [ ] AddComment
+  - [ ] GetSubLanguages
+  - [ ] DetectLanguage
+  - [ ] GetAvailableTranslations
+  - [ ] GetTranslation
+  - [ ] AutoUpdate
+  - [ ] CheckMovieHash
+  - [ ] CheckSubHash
 
 # License
 
