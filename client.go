@@ -97,9 +97,9 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	return
 }
 
-// Checks wether a subtitle already exists in OSDB. The mandatory fields
-// in the received Subtitle map are: subhash, subfilename, moviehash,
-// moviebytesize, and moviefilename.
+// Checks wether subtitles already exists in OSDB. The mandatory fields in the
+// received Subtitle slice are: SubHash, SubFileName, MovieHash, MovieByteSize,
+// and MovieFileName.
 func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
 	args := c.hasSubtitlesParams(subs)
 	res := struct {
@@ -115,6 +115,18 @@ func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
 	}
 
 	return res.Exists == 1, nil
+}
+
+// Keep session alive
+func (c *Client) Noop() (err error) {
+	res := struct {
+		Status string `xmlrpc:"status"`
+	}{}
+	err = c.Call("NoOperation", []interface{}{c.Token}, &res)
+	if err == nil && res.Status != StatusSuccess {
+		err = fmt.Errorf("NoOp error: %s", res.Status)
+	}
+	return
 }
 
 // Login to the API, and return a session token.
