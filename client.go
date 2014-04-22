@@ -182,18 +182,12 @@ func (c *Client) hasSubtitlesParams(subs []Subtitle) []interface{} {
 	subMap := map[string]interface{}{}
 	for i, s := range subs {
 		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
-		param := struct {
-			SubHash       string `xmlrpc:"subhash"`
-			SubFileName   string `xmlrpc:"subfilename"`
-			MovieHash     string `xmlrpc:"moviehash"`
-			MovieByteSize string `xmlrpc:"moviebytesize"`
-			MovieFileName string `xmlrpc:"moviefilename"`
-		}{
-			s.SubHash,
-			s.SubFileName,
-			s.MovieHash,
-			s.MovieByteSize,
-			s.MovieFileName,
+		param := map[string]string{
+			"subhash":       s.SubHash,
+			"subfilename":   s.SubFileName,
+			"moviehash":     s.MovieHash,
+			"moviebytesize": s.MovieByteSize,
+			"moviefilename": s.MovieFileName,
 		}
 		subMap[key] = param
 	}
