@@ -46,3 +46,10 @@ func TestHashWithSample(t *testing.T) {
 		t.Fatalf("Expected hash 0x%016x, got 0x%016x", dataHash, hash)
 	}
 }
+
+func TestNewClient(t *testing.T) {
+	_, err := NewClient()
+	if err != nil {
+		t.Fatalf("Can't allocate new client: %v", err)
+	}
+}
