@@ -188,7 +188,7 @@ func (c *Client) hashSearchParams(path string, langs []string) (*[]interface{}, 
 }
 
 // Query parameters for TryUploadSubtitles
-func (c *Client) hasSubtitlesParams(subs []Subtitle) []interface{} {
+func (c *Client) hasSubtitlesParams(subs []Subtitle) *[]interface{} {
 	// Convert subs param to map[string]struct{...}, because OSDb.
 	subMap := map[string]interface{}{}
 	for i, s := range subs {
@@ -203,5 +203,5 @@ func (c *Client) hasSubtitlesParams(subs []Subtitle) []interface{} {
 		subMap[key] = param
 	}
 
-	return []interface{}{c.Token, subMap}
+	return &[]interface{}{c.Token, subMap}
 }
