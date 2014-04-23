@@ -2,7 +2,7 @@
 An API client for opensubtitles.org
 
 This is a client for the OSDb protocol. Currently the package only allows movie
-identification, and subtitles search.
+identification, subtitles search, and download.
 */
 package osdb
 
