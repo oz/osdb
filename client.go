@@ -73,15 +73,14 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	// Download
 	files, err := c.DownloadSubtitles([]int{id})
 	if err != nil {
-		return err
+		return
 	}
 	if len(files) == 0 {
 		return fmt.Errorf("No file match this subtitle ID")
 	}
 
 	// Save to disk.
-	file := files[0]
-	r, err := file.Reader()
+	r, err := files[0].Reader()
 	if err != nil {
 		return
 	}
