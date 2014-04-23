@@ -34,20 +34,14 @@ func NewClient() (*Client, error) {
 	return c, nil
 }
 
-// Generate a OSDB hash for a file.
-func Hash(path string) (hash uint64, err error) {
-	// Check file size.
-	fi, err := os.Stat(path)
+// Generate a OSDB hash for a File.
+func HashFile(file *os.File) (hash uint64, err error) {
+	fi, err := file.Stat()
 	if err != nil {
 		return
 	}
 	if fi.Size() < ChunkSize {
 		return 0, fmt.Errorf("File is too small")
-	}
-
-	file, err := os.Open(path)
-	if err != nil {
-		return
 	}
 
 	// Read head and tail blocks.
@@ -73,6 +67,16 @@ func Hash(path string) (hash uint64, err error) {
 	}
 
 	return hash + uint64(fi.Size()), nil
+}
+
+// Generate a OSDB hash for a file at path.
+func Hash(path string) (uint64, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+	return HashFile(file)
 }
 
 // Read a chunk of a file at `offset` so as to fill `buf`.
