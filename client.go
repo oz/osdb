@@ -101,7 +101,9 @@ func (c *Client) DownloadSubtitles(ids []int) ([]SubtitleFile, error) {
 	if err := c.Call("DownloadSubtitles", params, &res); err != nil {
 		return nil, err
 	}
-
+	if res.Status != StatusSuccess {
+		return nil, fmt.Errorf("DownloadSubtitles error: %s", res.Status)
+	}
 	return res.Data, nil
 }
 
