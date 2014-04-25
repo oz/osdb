@@ -176,12 +176,12 @@ c.UserAgent = "My custom user agent"
   - :ballot_box_with_check: LogOut
   - :ballot_box_with_check: NoOperation
   - :ballot_box_with_check: SearchSubtitles by hash
-  - SearchSubtitles by IMDB ID
+  - :ballot_box_with_check: SearchSubtitles by IMDB IDs
   - SearchToMail
   - :ballot_box_with_check: DownloadSubtitles
   - :ballot_box_with_check: TryUploadSubtitles
   - UploadSubtitles
-  - SearchMoviesOnIMDB
+  - :ballot_box_with_check: SearchMoviesOnIMDB
   - GetIMDBMovieDetails
   - InsertMovie
   - ServerInfo
