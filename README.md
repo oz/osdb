@@ -182,7 +182,7 @@ c.UserAgent = "My custom user agent"
   - :ballot_box_with_check: TryUploadSubtitles
   - UploadSubtitles
   - :ballot_box_with_check: SearchMoviesOnIMDB
-  - GetIMDBMovieDetails
+  - :ballot_box_with_check: GetIMDBMovieDetails
   - InsertMovie
   - ServerInfo
   - ReportWrongMovieHash

@@ -27,8 +27,23 @@ type Client struct {
 }
 
 type Movie struct {
-	Id    string `xmlrpc:"id"`
-	Title string `xmlrpc:"title"`
+	Id             string            `xmlrpc:"id"`
+	Title          string            `xmlrpc:"title"`
+	Cover          string            `xmlrpc:"cover"`
+	Year           string            `xmlrpc:"year"`
+	Duration       string            `xmlrpc:"duration"`
+	TagLine        string            `xmlrpc:"tagline"`
+	Plot           string            `xmlrpc:"plot"`
+	Goofs          string            `xmlrpc:"goofs"`
+	Trivia         string            `xmlrpc:"trivia"`
+	Cast           map[string]string `xmlrpc:"cast"`
+	Directors      map[string]string `xmlrpc:"directors"`
+	Writers        map[string]string `xmlrpc:"writers"`
+	Awards         string            `xmlrpc:"awards"`
+	Genres         []string          `xmlrpc:"genres"`
+	Countries      []string          `xmlrpc:"country"`
+	Languages      []string          `xmlrpc:"language"`
+	Certifications []string          `xmlrpc:"certification"`
 }
 
 // Search subtitles matching a file hash.
@@ -72,7 +87,6 @@ func (c *Client) SearchSubtitles(params *[]interface{}) ([]Subtitle, error) {
 	if err := c.Call("SearchSubtitles", *params, &res); err != nil {
 		return nil, err
 	}
-
 	return res.Data, nil
 }
 
@@ -89,6 +103,22 @@ func (c *Client) SearchOnImdb(q string) ([]Movie, error) {
 		return nil, fmt.Errorf("SearchMoviesOnIMDB error: %s", res.Status)
 	}
 	return res.Data, nil
+}
+
+// Get movie details from IMDB.
+func (c *Client) GetImdbMovieDetails(id string) (*Movie, error) {
+	params := []interface{}{c.Token, id}
+	res := struct {
+		Status string `xmlrpc:"status"`
+		Data   Movie  `xmlrpc:"data"`
+	}{}
+	if err := c.Call("GetIMDBMovieDetails", params, &res); err != nil {
+		return nil, err
+	}
+	if res.Status != StatusSuccess {
+		return nil, fmt.Errorf("GetIMDBMovieDetails error: %s", res.Status)
+	}
+	return &res.Data, nil
 }
 
 // Download subtitles by file ID.
