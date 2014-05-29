@@ -172,29 +172,29 @@ c.UserAgent = "My custom user agent"
 
 [Full API coverage][apidocs]:
 
-  - :ballot_box_with_check: LogIn
-  - :ballot_box_with_check: LogOut
-  - :ballot_box_with_check: NoOperation
-  - :ballot_box_with_check: SearchSubtitles by hash
-  - :ballot_box_with_check: SearchSubtitles by IMDB IDs
-  - SearchToMail
-  - :ballot_box_with_check: DownloadSubtitles
-  - :ballot_box_with_check: TryUploadSubtitles
-  - UploadSubtitles
-  - :ballot_box_with_check: SearchMoviesOnIMDB
-  - :ballot_box_with_check: GetIMDBMovieDetails
-  - InsertMovie
-  - ServerInfo
-  - ReportWrongMovieHash
-  - SubtitlesVote
-  - AddComment
-  - GetSubLanguages
-  - DetectLanguage
-  - GetAvailableTranslations
-  - GetTranslation
-  - AutoUpdate
-  - CheckMovieHash
-  - CheckSubHash
+  - [x] LogIn
+  - [x] LogOut
+  - [x] NoOperation
+  - [x] SearchSubtitles by hash
+  - [x] SearchSubtitles by IMDB IDs
+  - [ ] SearchToMail
+  - [x] DownloadSubtitles
+  - [x] TryUploadSubtitles
+  - [ ] UploadSubtitles
+  - [x] SearchMoviesOnIMDB
+  - [x] GetIMDBMovieDetails
+  - [ ] InsertMovie
+  - [ ] ServerInfo
+  - [ ] ReportWrongMovieHash
+  - [ ] SubtitlesVote
+  - [ ] AddComment
+  - [ ] GetSubLanguages
+  - [ ] DetectLanguage
+  - [ ] GetAvailableTranslations
+  - [ ] GetTranslation
+  - [ ] AutoUpdate
+  - [ ] CheckMovieHash
+  - [ ] CheckSubHash
 
 # License
 
