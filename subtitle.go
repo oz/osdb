@@ -55,6 +55,18 @@ type Subtitle struct {
 	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
 }
 
+// A collection of subtitles
+type Subtitles []Subtitle
+
+// The best subtitle of the collection, for some definition of "best" at
+// least.
+func (subs Subtitles) Best() *Subtitle {
+	if len(subs) > 0 {
+		return &subs[0]
+	}
+	return nil
+}
+
 // SubtitleFile contains file data as returned by OSDB's API, that is to
 // say: gzip-ped and base64-encoded text.
 type SubtitleFile struct {

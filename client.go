@@ -46,8 +46,11 @@ type Movie struct {
 	Certifications []string          `xmlrpc:"certification"`
 }
 
+// A collection of movies.
+type Movies []Movie
+
 // Search subtitles matching a file hash.
-func (c *Client) FileSearch(path string, langs []string) ([]Subtitle, error) {
+func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	// Hash file, and other params values.
 	params, err := c.hashSearchParams(path, langs)
 	if err != nil {
@@ -57,7 +60,7 @@ func (c *Client) FileSearch(path string, langs []string) ([]Subtitle, error) {
 }
 
 // Search subtitles matching IMDB IDs.
-func (c *Client) ImdbIdSearch(ids []string, langs []string) ([]Subtitle, error) {
+func (c *Client) ImdbIdSearch(ids []string, langs []string) (Subtitles, error) {
 	// OSDB search params struct
 	params := []interface{}{
 		c.Token,
@@ -79,7 +82,7 @@ func (c *Client) ImdbIdSearch(ids []string, langs []string) ([]Subtitle, error) 
 }
 
 // Search Subtitles, DIY method.
-func (c *Client) SearchSubtitles(params *[]interface{}) ([]Subtitle, error) {
+func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	res := struct {
 		Data []Subtitle `xmlrpc:"data"`
 	}{}
@@ -90,11 +93,11 @@ func (c *Client) SearchSubtitles(params *[]interface{}) ([]Subtitle, error) {
 	return res.Data, nil
 }
 
-func (c *Client) SearchOnImdb(q string) ([]Movie, error) {
+func (c *Client) SearchOnImdb(q string) (Movies, error) {
 	params := []interface{}{c.Token, q}
 	res := struct {
-		Status string  `xmlrpc:"status"`
-		Data   []Movie `xmlrpc:"data"`
+		Status string `xmlrpc:"status"`
+		Data   Movies `xmlrpc:"data"`
 	}{}
 	if err := c.Call("SearchMoviesOnIMDB", params, &res); err != nil {
 		return nil, err
