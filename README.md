@@ -71,9 +71,10 @@ c.LogIn("", "", "")
 
 ## Searching subtitles
 
-Subtitle search is (for now) entirely file based: you can not yet search by
-movie name, or using an IMDB ID. So, in order to search subtitles, you *must*
-have a movie file for the which we compute a hash, then used to search OSDB.
+Subtitle search can be done in a number of ways: using special file-hashes,
+IMDB movie IDs, or even using full-text queries. Hash-based search will
+generally yield the best results, so this is what is demoed next. However, in
+order to search with this method, you *must* have a movie file to hash.
 
 ```go
 path := "/path/to/movie.avi"
