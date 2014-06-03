@@ -1,24 +1,47 @@
 ![travis](https://api.travis-ci.org/oz/osdb.png?branch=master)
 
-This is a Go client library for [OpenSubtitles](http://opensubtitles.org/).
+This is a Go client, and library for
+[OpenSubtitles](http://opensubtitles.org/).
+
+This project has not reached version `0.1` yet, and it will change in many
+breaking ways. But of course, you are welcome to check it out, and participate:
+report issues when you find those, or check the "TODO" section down there.
+
+
+# Install
+
+If you are only interested in (yet another) CLI interface for OpenSubtitles,
+then install the latest stable Go version, and run: `go install
+github.com/oz/osdb/cmd/osdb`. Provided you did setup your Go environment
+correctly, you should now have a very basic `osdb` command to interact with
+OpenSubtitles.
+
+```
+$ go install github.com/oz/osdb/cmd/osdb
+$ osdb --help
+OSDB, an OpenSubtitles client.
+
+Usage:
+	osdb get blablabla...
+
+```
+
+
+# Hack...
 
 The generated documentation for this package is available at:
 http://godoc.org/github.com/oz/osdb
 
-This lib has not reached version `0.1` yet, and its API will change in many
-breaking ways.  But of course, you are welcome to check it out, and
-participate. :)
-
-# Getting started...
-
 To get started...
 
  * Install with `go get -d github.com/oz/osdb`,
- * import `"github.com/oz/osdb"`,
- * and try some of the examples.
+ * and import `"github.com/oz/osdb"` in your Go code,
+ * or try some of the examples in the README.
 
-To use OpenSubtitles' API you need to allocate a client, and to login (even
-anonymously) in order to receive a session token. Here is an example:
+To access the OpenSubtitles' XML-RPC server you first need to allocate a
+client, and then use it to login (even anonymously) in order to receive a
+session token. With that, you are finally be allowed to talk. Here is a short
+example:
 
 ```go
 package main
@@ -62,7 +85,7 @@ if err != nil {
 // c.Token is now set.
 ```
 
-However, you do not need to register a user, to login anonymously, just leave
+However you do not need to register a user. To login anonymously, just leave
 the `user` and `password` parameters blank:
 
 ```go
@@ -117,10 +140,10 @@ Before trying to upload an allegedly "new" subtitles file to OSDB, you should
 always check whether they already have it.
 
 As some movies fit on more than one "CD" (remember those?), you will need to
-create a slice of `Subtitle`, one per subtitle file:
+use the `Subtitles` type (note the *s*?), one per subtitle file:
 
 ```go
-subs := []osdb.Subtitle{
+subs := osdb.Subtitles{
 		{
 			SubHash:       subHash,       // md5 hash of subtitle file
 			SubFileName:   subFileName,
@@ -131,7 +154,7 @@ subs := []osdb.Subtitle{
 }
 ```
 
-Then simply feed that to `HasSubtitles`, and you'll be done.
+Then simply feed that to `HasSubtitles`, and you will be done.
 
 ```go
 found, err := c.HasSubtitles(subs)
@@ -142,7 +165,8 @@ if err != nil {
 
 ## Hashing a file
 
-OSDB uses a custom hash to identify movie files.
+OSDB uses a custom checksum-hash to identify movie files. If you ever need
+these:
 
 ```go
 hash, err := osdb.Hash("somefile.avi")
@@ -196,6 +220,7 @@ c.UserAgent = "My custom user agent"
   - [ ] AutoUpdate
   - [ ] CheckMovieHash
   - [ ] CheckSubHash
+
 
 # License
 
