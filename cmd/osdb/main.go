@@ -39,11 +39,32 @@ func Get(file string, lang string) error {
 	return fmt.Errorf("No subtitles found!")
 }
 
+func Imdb(q string) error {
+	client, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Searching %s on IMDB...\n\n", q)
+	movies, err := client.SearchOnImdb(q)
+	if err != nil {
+		return err
+	}
+	if movies.Empty() {
+		fmt.Println("No results.")
+	}
+	for _, m := range movies {
+		fmt.Printf("%s http://www.imdb.com/title/tt%s/\n", m.Title, m.Id)
+	}
+	return nil
+}
+
 func main() {
 	usage := `OSDB, an OpenSubtitles client.
 
 Usage:
 	osdb get [--language=<lang>] <file>
+	osdb imdb <query>
 	osdb -h | --help
 	osdb --version
 
@@ -62,6 +83,12 @@ Options:
 
 	if arguments["get"] == true {
 		if err = Get(arguments["<file>"].(string), lang); err != nil {
+			fmt.Printf("Error: %s\n", err)
+		}
+	}
+
+	if arguments["imdb"] == true {
+		if err = Imdb(arguments["<query>"].(string)); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}

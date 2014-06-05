@@ -49,6 +49,10 @@ type Movie struct {
 // A collection of movies.
 type Movies []Movie
 
+func (m Movies) Empty() bool {
+	return len(m) == 0
+}
+
 // Search subtitles matching a file hash.
 func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	// Hash file, and other params values.
@@ -93,6 +97,7 @@ func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	return res.Data, nil
 }
 
+// Search movies on IMDB.
 func (c *Client) SearchOnImdb(q string) (Movies, error) {
 	params := []interface{}{c.Token, q}
 	res := struct {
