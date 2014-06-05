@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
+	"text/tabwriter"
 
 	"github.com/docopt/docopt.go"
 	"github.com/oz/osdb"
@@ -39,7 +41,8 @@ func Get(file string, lang string) error {
 	return fmt.Errorf("No subtitles found!")
 }
 
-func Imdb(q string) error {
+// Search movies on IMDB
+func ImdbSearch(q string) error {
 	client, err := getClient()
 	if err != nil {
 		return err
@@ -59,17 +62,44 @@ func Imdb(q string) error {
 	return nil
 }
 
+// Show IMDB movie details
+func ImdbShow(id string) error {
+	client, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	m, err := client.GetImdbMovieDetails(id)
+	if err != nil {
+		return err
+	}
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+	fmt.Fprintf(w, "IMDB Id:\t%s\n", m.Id)
+	fmt.Fprintf(w, "Title:\t%s\n", m.Title)
+	fmt.Fprintf(w, "Year:\t%s\n", m.Year)
+	fmt.Fprintf(w, "Duration:\t%s\n", m.Duration)
+	fmt.Fprintf(w, "Cover:\t%s\n", m.Cover)
+	fmt.Fprintf(w, "TagLine:\t%s\n", m.TagLine)
+	fmt.Fprintf(w, "Plot:\t%s\n", m.Plot)
+	fmt.Fprintf(w, "Goofs:\t%s\n", m.Goofs)
+	fmt.Fprintf(w, "Trivia:\t%s\n", m.Trivia)
+	w.Flush()
+	return nil
+}
+
 func main() {
 	usage := `OSDB, an OpenSubtitles client.
 
 Usage:
 	osdb get [--language=<lang>] <file>
 	osdb imdb <query>
+	osdb imdb show <movie id>
 	osdb -h | --help
 	osdb --version
 
 Options:
-	--language=<lang>	Language when searching subtitles [default: ENG].
+	--language=<lang>	Subtitles' language [default: ENG].
 `
 	arguments, err := docopt.Parse(usage, nil, true, "OSDB 0.1a", false)
 	if err != nil {
@@ -88,8 +118,14 @@ Options:
 	}
 
 	if arguments["imdb"] == true {
-		if err = Imdb(arguments["<query>"].(string)); err != nil {
-			fmt.Printf("Error: %s\n", err)
+		if arguments["show"] == true {
+			if err = ImdbShow(arguments["<movie id>"].(string)); err != nil {
+				fmt.Printf("Error: %s\n", err)
+			}
+		} else {
+			if err = ImdbSearch(arguments["<query>"].(string)); err != nil {
+				fmt.Printf("Error: %s\n", err)
+			}
 		}
 	}
 }
