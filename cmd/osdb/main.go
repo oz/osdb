@@ -15,7 +15,10 @@ func getClient() (client *osdb.Client, err error) {
 	if client, err = osdb.NewClient(); err != nil {
 		return
 	}
-	if err = client.LogIn("", "", ""); err != nil {
+	if err = client.LogIn(
+		os.Getenv("OSDB_LOGIN"),
+		os.Getenv("OSDB_PASSWORD"),
+		os.Getenv("OSDB_LANG")); err != nil {
 		return
 	}
 	return
