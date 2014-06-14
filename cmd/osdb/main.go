@@ -44,6 +44,30 @@ func Get(file string, lang string) error {
 	return fmt.Errorf("No subtitles found!")
 }
 
+func Put(movie_file string, sub_file string) error {
+	fmt.Println("- Checking file against OSDB...")
+
+	client, err := getClient()
+	if err != nil {
+		return err
+	}
+	alreadyInDb, err := client.HasSubtitlesForFiles(movie_file, sub_file)
+	if err != nil {
+		return err
+	}
+	if alreadyInDb == true {
+		fmt.Println("These subtitles already exist.")
+	} else {
+		fmt.Println("Uploading new subtitles... once the feature's implemented.")
+	}
+	return nil
+}
+
+func fileToSubtitle(file string) (s osdb.Subtitle, err error) {
+	err = fmt.Errorf("Not implemented.")
+	return
+}
+
 // Search movies on IMDB
 func ImdbSearch(q string) error {
 	client, err := getClient()
@@ -96,6 +120,7 @@ func main() {
 
 Usage:
 	osdb get [--language=<lang>] <file>
+	osdb (put|upload) <movie_file> <sub_file>
 	osdb imdb <query>
 	osdb imdb show <movie id>
 	osdb -h | --help
@@ -114,12 +139,21 @@ Options:
 		lang = arguments["--language"].(string)
 	}
 
+	// Download subtitles
 	if arguments["get"] == true {
 		if err = Get(arguments["<file>"].(string), lang); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}
 
+	// Upload subtitles
+	if arguments["upload"] == true || arguments["put"] == true {
+		if err = Put(arguments["<movie_file>"].(string), arguments["<sub_file>"].(string)); err != nil {
+			fmt.Printf("Error: %s\n", err)
+		}
+	}
+
+	// Search IMDB
 	if arguments["imdb"] == true {
 		if arguments["show"] == true {
 			if err = ImdbShow(arguments["<movie id>"].(string)); err != nil {
