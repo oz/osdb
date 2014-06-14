@@ -2,7 +2,13 @@ package osdb
 
 import (
 	"compress/gzip"
+	"crypto/md5"
 	"encoding/base64"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"strconv"
 	"strings"
 )
 
@@ -85,4 +91,40 @@ func (sf *SubtitleFile) Reader() (r *gzip.Reader, err error) {
 	sf.reader, err = gzip.NewReader(dec)
 
 	return sf.reader, err
+}
+
+// Build a Subtitle struct for a file, suitable for osdb.HasSubtitles()
+func NewSubtitleWithFile(movie_file string, sub_file string) (s Subtitle, err error) {
+	s.SubFileName = path.Base(sub_file)
+	// Compute md5 sum
+	sub_io, err := os.Open(sub_file)
+	if err != nil {
+		return
+	}
+	defer sub_io.Close()
+	h := md5.New()
+	_, err = io.Copy(h, sub_io)
+	if err != nil {
+		return
+	}
+	s.SubHash = fmt.Sprintf("%x", h.Sum(nil))
+
+	// Movie filename, byte-size, & hash.
+	s.MovieFileName = path.Base(movie_file)
+	movie_io, err := os.Open(movie_file)
+	if err != nil {
+		return
+	}
+	defer movie_io.Close()
+	stat, err := movie_io.Stat()
+	if err != nil {
+		return
+	}
+	s.MovieByteSize = strconv.FormatInt(stat.Size(), 10)
+	movie_hash, err := HashFile(movie_io)
+	if err != nil {
+		return
+	}
+	s.MovieHash = fmt.Sprintf("%x", movie_hash)
+	return
 }
