@@ -56,7 +56,7 @@ func (m Movies) Empty() bool {
 // Search subtitles matching a file hash.
 func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	// Hash file, and other params values.
-	params, err := c.hashSearchParams(path, langs)
+	params, err := c.fileToParams(path, langs)
 	if err != nil {
 		return nil, err
 	}
@@ -183,21 +183,34 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	return
 }
 
-// Checks wether subtitles already exists in OSDB. The mandatory fields in the
+// Checks whether OSDB already has subtitles for a movie and subtitle
+// files.
+func (c *Client) HasSubtitlesForFiles(movie_file string, sub_file string) (bool, error) {
+	subtitle, err := NewSubtitleWithFile(movie_file, sub_file)
+	if err != nil {
+		return true, err
+	}
+	return c.HasSubtitles(Subtitles{subtitle})
+}
+
+// Checks whether subtitles already exists in OSDB. The mandatory fields in the
 // received Subtitle slice are: SubHash, SubFileName, MovieHash, MovieByteSize,
 // and MovieFileName.
-func (c *Client) HasSubtitles(subs []Subtitle) (bool, error) {
-	args := c.hasSubtitlesParams(subs)
+func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
+	args, err := subs.toUploadParams(c)
+	if err != nil {
+		return true, err
+	}
 	res := struct {
 		Status string   `xmlrpc:"status"`
 		Exists int      `xmlrpc:"alreadyindb"`
 		Data   Subtitle `xmlrpc:"data"`
 	}{}
 	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
-		return false, err
+		return true, err
 	}
 	if res.Status != StatusSuccess {
-		return false, fmt.Errorf("HasSubtitles error: %s", res.Status)
+		return true, fmt.Errorf("HasSubtitles: %s", res.Status)
 	}
 
 	return res.Exists == 1, nil
@@ -210,7 +223,7 @@ func (c *Client) Noop() (err error) {
 	}{}
 	err = c.Call("NoOperation", []interface{}{c.Token}, &res)
 	if err == nil && res.Status != StatusSuccess {
-		err = fmt.Errorf("NoOp error: %s", res.Status)
+		err = fmt.Errorf("NoOp: %s", res.Status)
 	}
 	return
 }
@@ -230,7 +243,7 @@ func (c *Client) LogIn(user string, pass string, lang string) (err error) {
 	}
 
 	if res.Status != StatusSuccess {
-		return fmt.Errorf("login error: %s", res.Status)
+		return fmt.Errorf("Login: %s", res.Status)
 	}
 	c.Token = res.Token
 	return
@@ -246,7 +259,7 @@ func (c *Client) LogOut() (err error) {
 }
 
 // Build query parameters for hash-based movie search.
-func (c *Client) hashSearchParams(path string, langs []string) (*[]interface{}, error) {
+func (c *Client) fileToParams(path string, langs []string) (*[]interface{}, error) {
 	// File size
 	file, err := os.Open(path)
 	if err != nil {
@@ -278,23 +291,4 @@ func (c *Client) hashSearchParams(path string, langs []string) (*[]interface{}, 
 		}},
 	}
 	return &params, nil
-}
-
-// Query parameters for TryUploadSubtitles
-func (c *Client) hasSubtitlesParams(subs []Subtitle) *[]interface{} {
-	// Convert subs param to map[string]struct{...}, because OSDb.
-	subMap := map[string]interface{}{}
-	for i, s := range subs {
-		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
-		param := map[string]string{
-			"subhash":       s.SubHash,
-			"subfilename":   s.SubFileName,
-			"moviehash":     s.MovieHash,
-			"moviebytesize": s.MovieByteSize,
-			"moviefilename": s.MovieFileName,
-		}
-		subMap[key] = param
-	}
-
-	return &[]interface{}{c.Token, subMap}
 }
