@@ -34,7 +34,7 @@ func NewClient() (*Client, error) {
 	return c, nil
 }
 
-// Generate a OSDB hash for a File.
+// Generate an OSDB hash for an *os.File.
 func HashFile(file *os.File) (hash uint64, err error) {
 	fi, err := file.Stat()
 	if err != nil {
@@ -69,7 +69,7 @@ func HashFile(file *os.File) (hash uint64, err error) {
 	return hash + uint64(fi.Size()), nil
 }
 
-// Generate a OSDB hash for a file at path.
+// Generate a OSDB hash for a file.
 func Hash(path string) (uint64, error) {
 	file, err := os.Open(path)
 	if err != nil {
