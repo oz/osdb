@@ -128,3 +128,23 @@ func NewSubtitleWithFile(movie_file string, sub_file string) (s Subtitle, err er
 	s.MovieHash = fmt.Sprintf("%x", movie_hash)
 	return
 }
+
+// Convert Subtitle to a map[string]string{}, because OSDB requires a
+// specific structure to match subtitles when uploading (or trying to).
+func (subs *Subtitles) toUploadParams(client *Client) ([]interface{}, error) {
+	subMap := map[string]interface{}{}
+
+	for i, s := range *subs {
+		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
+		param := map[string]string{
+			"subhash":       s.SubHash,
+			"subfilename":   s.SubFileName,
+			"moviehash":     s.MovieHash,
+			"moviebytesize": s.MovieByteSize,
+			"moviefilename": s.MovieFileName,
+		}
+		subMap[key] = param
+	}
+
+	return []interface{}{client.Token, subMap}, nil
+}
