@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/docopt/docopt.go"
@@ -121,7 +122,7 @@ func main() {
 Usage:
 	osdb get [--language=<lang>] <file>
 	osdb (put|upload) <movie_file> <sub_file>
-	osdb imdb <query>
+	osdb imdb <query>...
 	osdb imdb show <movie id>
 	osdb -h | --help
 	osdb --version
@@ -160,7 +161,8 @@ Options:
 				fmt.Printf("Error: %s\n", err)
 			}
 		} else {
-			if err = ImdbSearch(arguments["<query>"].(string)); err != nil {
+			query := strings.Join(arguments["<query>"].([]string), " ")
+			if err = ImdbSearch(query); err != nil {
 				fmt.Printf("Error: %s\n", err)
 			}
 		}
