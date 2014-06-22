@@ -33,10 +33,10 @@ func TestHashWithSample(t *testing.T) {
 	copy(data, []byte("blablabla"))
 
 	err := ioutil.WriteFile("./sample", data, 0644)
-	defer os.Remove("./sample")
 	if err != nil {
 		t.Fatalf("Can't create sample file")
 	}
+	defer os.Remove("./sample")
 
 	hash, err := Hash("./sample")
 	if err != nil {
