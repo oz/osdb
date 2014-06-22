@@ -42,7 +42,8 @@ func Get(file string, lang string) error {
 		// FIXME check if dest exists instead of overwriting. O:)
 		return client.DownloadTo(best, dest)
 	}
-	return fmt.Errorf("No subtitles found!")
+	fmt.Println("- No subtitles found!")
+	return nil
 }
 
 func Put(movie_file string, sub_file string) error {
