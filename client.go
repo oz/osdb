@@ -199,14 +199,14 @@ func (c *Client) HasSubtitlesForFiles(movie_file string, sub_file string) (bool,
 // received Subtitle slice are: SubHash, SubFileName, MovieHash, MovieByteSize,
 // and MovieFileName.
 func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
-	args, err := subs.toUploadParams(c)
+	subArgs, err := subs.toUploadParams()
 	if err != nil {
 		return true, err
 	}
+	args := []interface{}{c.Token, subArgs}
 	res := struct {
-		Status string   `xmlrpc:"status"`
-		Exists int      `xmlrpc:"alreadyindb"`
-		Data   Subtitle `xmlrpc:"data"`
+		Status string `xmlrpc:"status"`
+		Exists int    `xmlrpc:"alreadyindb"`
 	}{}
 	if err := c.Call("TryUploadSubtitles", args, &res); err != nil {
 		return true, err
