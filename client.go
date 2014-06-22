@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	OSDBServer       = "http://api.opensubtitles.org/xml-rpc"
-	DefaultUserAgent = "OS Test User Agent" // OSDB's test agent
-	SearchLimit      = 100
-	StatusSuccess    = "200 OK"
+	DefaultOSDBServer = "http://api.opensubtitles.org/xml-rpc"
+	DefaultUserAgent  = "OS Test User Agent" // OSDB's test agent
+	SearchLimit       = 100
+	StatusSuccess     = "200 OK"
 )
 
 type Client struct {

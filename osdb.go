@@ -21,7 +21,11 @@ const (
 
 // Allocate a new OSDB client
 func NewClient() (*Client, error) {
-	rpc, err := xmlrpc.NewClient(OSDBServer, nil)
+	osdbServer := os.Getenv("OSDB_SERVER")
+	if osdbServer == "" {
+		osdbServer = DefaultOSDBServer
+	}
+	rpc, err := xmlrpc.NewClient(osdbServer, nil)
 	if err != nil {
 		return nil, err
 	}
