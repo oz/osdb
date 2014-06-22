@@ -88,7 +88,7 @@ func (c *Client) ImdbIdSearch(ids []string, langs []string) (Subtitles, error) {
 // Search Subtitles, DIY method.
 func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	res := struct {
-		Data []Subtitle `xmlrpc:"data"`
+		Data Subtitles `xmlrpc:"data"`
 	}{}
 
 	if err := c.Call("SearchSubtitles", *params, &res); err != nil {
