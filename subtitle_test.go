@@ -10,7 +10,7 @@ func TestBestWithNoResults(t *testing.T) {
 	subs := Subtitles{}
 	res := subs.Best()
 	if res != nil {
-		t.Fatalf("Expected nil, got: ", res)
+		t.Fatalf("Expected nil, got: %v", res)
 	}
 }
 
@@ -21,17 +21,17 @@ func TestBestWithResults(t *testing.T) {
 	}
 	res := subs.Best()
 	if res == nil {
-		t.Fatalf("Expected Go Subtitle, got:", res)
+		t.Fatalf("Expected Go Subtitle, got: %v", res)
 	}
 	if res.MovieName != "Go" {
-		t.Fatalf("Expected Go, got:", res)
+		t.Fatalf("Expected Go, got: %v", res)
 	}
 }
 
 func TestNewSubtitleWithFile_NoFile(t *testing.T) {
 	s, err := NewSubtitleWithFile("./no_movie_file", "./no_sub_file")
 	if err == nil {
-		t.Fatalf("Expected error, got subtitle:", s)
+		t.Fatalf("Expected error, got subtitle: %v", s)
 	}
 }
 
@@ -58,7 +58,7 @@ func TestNewSubtitleWithFile(t *testing.T) {
 
 	s, err := NewSubtitleWithFile("./test-movie.avi", "./test-movie.srt")
 	if err != nil {
-		t.Fatalf("Expected Subtitle, got error:", err)
+		t.Fatalf("Expected Subtitle, got error: %v", err)
 	}
 
 	if s.SubFileName != "test-movie.srt" {

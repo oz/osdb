@@ -90,7 +90,7 @@ func readChunk(file *os.File, offset int64, buf []byte) (err error) {
 		return
 	}
 	if n != ChunkSize {
-		return fmt.Errorf("Invalid read", n)
+		return fmt.Errorf("Invalid read %v", n)
 	}
 	return
 }
