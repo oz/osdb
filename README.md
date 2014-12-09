@@ -180,10 +180,10 @@ fmt.Println("hash: %x\n", hash)
 # On user agents...
 
 If you have read OSDB's [developer documentation][osdb], you should notice that
-you need to register an "official" user agent in order to use their API (meh).
-By default this library uses their "test" agent: fine for tests, but it is
-probably not what you would use in production. For registered applications, you
-can change the `UserAgent` variable with:
+you need to register an "official" user agent in order to use their API.
+
+By default this library identifies as the "osdb-go" agent. If you want to
+change this for some reason, change the client's `UserAgent` with:
 
 ```go
 c, err := osdb.NewClient()
