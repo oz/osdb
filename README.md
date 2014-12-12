@@ -11,19 +11,26 @@ report issues when you find those, or check the "TODO" section down there.
 # Install
 
 If you are only interested in (yet another) CLI interface for OpenSubtitles,
-then install the latest stable Go version, and run: `go install
-github.com/oz/osdb/cmd/osdb`. Provided you did setup your Go environment
-correctly, you should now have a very basic `osdb` command to interact with
-OpenSubtitles.
+then install the latest stable Go version, and run:
 
 ```
-$ go install github.com/oz/osdb/cmd/osdb
+go get github.com/oz/osdb
+go install github.com/oz/osdb/cmd/osdb
+```
+
+Provided you did setup your Go environment correctly, you should now have a
+very basic `osdb` command to interact with OpenSubtitles.
+
+```
 $ osdb --help
-OSDB, an OpenSubtitles client.
-
 Usage:
-	osdb get blablabla...
-
+    osdb get [--language=<lang>] <file>
+    osdb (put|upload) <movie_file> <sub_file>
+    osdb imdb <query>...
+    osdb imdb show <movie id>
+    osdb -h | --help
+    osdb --version
+$
 ```
 
 
@@ -195,8 +202,8 @@ c.UserAgent = "My custom user agent"
 
 # TODO
 
-[Full API coverage][apidocs]:
-
+ - [ ] Move docs from README to godoc.org
+ - [ ] [Full API coverage][apidocs]:
   - [x] LogIn
   - [x] LogOut
   - [x] NoOperation
