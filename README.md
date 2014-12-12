@@ -1,4 +1,4 @@
-![travis](https://api.travis-ci.org/oz/osdb.png?branch=master)
+[![Build Status](https://travis-ci.org/oz/osdb.svg?branch=master)](https://travis-ci.org/oz/osdb)
 
 This is a Go client, and library for
 [OpenSubtitles](http://opensubtitles.org/).
