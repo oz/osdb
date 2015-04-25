@@ -31,7 +31,7 @@ func Get(file string, lang string) error {
 		return err
 	}
 
-	fmt.Printf("- Getting subtitles for file: %s\n", path.Base(file))
+	fmt.Printf("- Getting %s subtitles for file: %s\n", lang, path.Base(file))
 	subs, err := client.FileSearch(file, []string{lang})
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func main() {
 	usage := `OSDB, an OpenSubtitles client.
 
 Usage:
-	osdb get [--language=<lang>] <file>
+	osdb get [--lang=<lang>] <file>
 	osdb (put|upload) <movie_file> <sub_file>
 	osdb imdb <query>...
 	osdb imdb show <movie id>
@@ -129,22 +129,26 @@ Usage:
 	osdb --version
 
 Options:
-	--language=<lang>	Subtitles' language [default: ENG].
+	--lang=<lang>	Subtitles' languages, comma separated [default: ENG].
 `
 	arguments, err := docopt.Parse(usage, nil, true, "OSDB 0.1a", false)
 	if err != nil {
 		fmt.Println("Parse error:", err)
 		return
 	}
-	lang := "ENG"
-	if arguments["--language"] != nil {
-		lang = arguments["--language"].(string)
+	langs := []string{"ENG"}
+	if arguments["--lang"] != nil {
+		langs = strings.Split(arguments["--lang"].(string), ",")
 	}
 
 	// Download subtitles
 	if arguments["get"] == true {
-		if err = Get(arguments["<file>"].(string), lang); err != nil {
-			fmt.Printf("Error: %s\n", err)
+		for _, lang := range langs {
+			if err = Get(arguments["<file>"].(string), lang); err != nil {
+				fmt.Printf("Error: %s\n", err)
+			} else {
+				break
+			}
 		}
 	}
 

@@ -11,26 +11,34 @@ report issues when you find those, or check the "TODO" section down there.
 # Install
 
 If you are only interested in (yet another) CLI interface for OpenSubtitles,
-then install the latest stable Go version, and run:
+then install the latest [Go](http://golang.org) release, and run:
 
 ```
-go get github.com/oz/osdb
-go install github.com/oz/osdb/cmd/osdb
+go get github.com/oz/osdb && go install github.com/oz/osdb/cmd/osdb
 ```
 
-Provided you did setup your Go environment correctly, you should now have a
-very basic `osdb` command to interact with OpenSubtitles.
+Provided that you setup your Go environment correctly, you now have a basic
+`osdb` command to interact with OpenSubtitles' API.
 
 ```
 $ osdb --help
 Usage:
-    osdb get [--language=<lang>] <file>
+    osdb get [--lang=<lang>] <file>
     osdb (put|upload) <movie_file> <sub_file>
     osdb imdb <query>...
     osdb imdb show <movie id>
     osdb -h | --help
     osdb --version
-$
+```
+
+Hence, to try to download french or english subtitles for a sample file:
+
+```
+$ osdb get --lang fra,eng sample.avi
+- Getting fra subtitles for file: sample.avi
+- No subtitles found!
+- Getting eng subtitles for file: sample.avi
+- Downloading to: sample.srt
 ```
 
 
@@ -73,7 +81,7 @@ func main() {
 
 # Basic examples
 
-## Getting a user session token 
+## Getting a user session token
 
 Although this library tries to be simple, to use OpenSubtitles' API you need to
 login first so as to receive a session token: without it you will not be able
@@ -89,10 +97,10 @@ err := c.LogIn("user", "password", "language")
 if err != nil {
 	// ...
 }
-// c.Token is now set.
+// c.Token is now set, and subsequent API calls will not be refused.
 ```
 
-However you do not need to register a user. To login anonymously, just leave
+However, you do not need to register a user. To login anonymously, just leave
 the `user` and `password` parameters blank:
 
 ```go
@@ -189,8 +197,9 @@ fmt.Println("hash: %x\n", hash)
 If you have read OSDB's [developer documentation][osdb], you should notice that
 you need to register an "official" user agent in order to use their API.
 
-By default this library identifies as the "osdb-go" agent. If you want to
-change this for some reason, change the client's `UserAgent` with:
+By default this library will present itself with the "osdb-go" agent, which is
+fine for me. However, if you need to change this, simply set the client's
+`UserAgent` with:
 
 ```go
 c, err := osdb.NewClient()
