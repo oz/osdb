@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/docopt/docopt.go"
+	"github.com/docopt/docopt-go"
 	"github.com/oz/osdb"
 )
 
@@ -86,7 +86,7 @@ func ImdbSearch(q string) error {
 		fmt.Println("No results.")
 	}
 	for _, m := range movies {
-		fmt.Printf("%s http://www.imdb.com/title/tt%s/\n", m.Title, m.Id)
+		fmt.Printf("%s %s http://www.imdb.com/title/tt%s/\n", m.Id, m.Title, m.Id)
 	}
 	return nil
 }
@@ -123,8 +123,8 @@ func main() {
 Usage:
 	osdb get [--lang=<lang>] <file>
 	osdb (put|upload) <movie_file> <sub_file>
-	osdb imdb <query>...
 	osdb imdb show <movie id>
+	osdb imdb <query>...
 	osdb -h | --help
 	osdb --version
 
