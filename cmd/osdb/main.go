@@ -7,9 +7,12 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/docopt/docopt-go"
 	"github.com/oz/osdb"
+	"github.com/docopt/docopt-go"
 )
+
+// Program version
+const VERSION = "0.1a"
 
 // Get an anonymous client connected to OSDB.
 func getClient() (client *osdb.Client, err error) {
@@ -25,7 +28,7 @@ func getClient() (client *osdb.Client, err error) {
 	return
 }
 
-func Get(file string, lang string) error {
+func getSubs(file string, lang string) error {
 	client, err := getClient()
 	if err != nil {
 		return err
@@ -46,14 +49,14 @@ func Get(file string, lang string) error {
 	return nil
 }
 
-func Put(movie_file string, sub_file string) error {
+func putSubs(movieFile string, subFile string) error {
 	fmt.Println("- Checking file against OSDB...")
 
 	client, err := getClient()
 	if err != nil {
 		return err
 	}
-	alreadyInDb, err := client.HasSubtitlesForFiles(movie_file, sub_file)
+	alreadyInDb, err := client.HasSubtitlesForFiles(movieFile, subFile)
 	if err != nil {
 		return err
 	}
@@ -71,7 +74,7 @@ func fileToSubtitle(file string) (s osdb.Subtitle, err error) {
 }
 
 // Search movies on IMDB
-func ImdbSearch(q string) error {
+func imdbSearch(q string) error {
 	client, err := getClient()
 	if err != nil {
 		return err
@@ -92,7 +95,7 @@ func ImdbSearch(q string) error {
 }
 
 // Show IMDB movie details
-func ImdbShow(id string) error {
+func imdbShow(id string) error {
 	client, err := getClient()
 	if err != nil {
 		return err
@@ -131,20 +134,26 @@ Usage:
 Options:
 	--lang=<lang>	Subtitles' languages, comma separated [default: ENG].
 `
-	arguments, err := docopt.Parse(usage, nil, true, "OSDB 0.1a", false)
+	arguments, err := docopt.Parse(usage, nil, true, "OSDB "+VERSION, false)
 	if err != nil {
 		fmt.Println("Parse error:", err)
 		return
 	}
-	langs := []string{"ENG"}
+
+	// Figure out which language we want.
+	l := os.Getenv("OSDB_LANG")
 	if arguments["--lang"] != nil {
-		langs = strings.Split(arguments["--lang"].(string), ",")
+		l = arguments["--lang"].(string)
+	}
+	langs := strings.Split(l, ",")
+	if len(langs) == 0 {
+		langs = []string{"ENG"}
 	}
 
 	// Download subtitles
 	if arguments["get"] == true {
-		for _, lang := range langs {
-			if err = Get(arguments["<file>"].(string), lang); err != nil {
+		for _, l := range langs {
+			if err = getSubs(arguments["<file>"].(string), l); err != nil {
 				fmt.Printf("Error: %s\n", err)
 			} else {
 				break
@@ -154,7 +163,7 @@ Options:
 
 	// Upload subtitles
 	if arguments["upload"] == true || arguments["put"] == true {
-		if err = Put(arguments["<movie_file>"].(string), arguments["<sub_file>"].(string)); err != nil {
+		if err = putSubs(arguments["<movie_file>"].(string), arguments["<sub_file>"].(string)); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}
@@ -162,12 +171,12 @@ Options:
 	// Search IMDB
 	if arguments["imdb"] == true {
 		if arguments["show"] == true {
-			if err = ImdbShow(arguments["<movie id>"].(string)); err != nil {
+			if err = imdbShow(arguments["<movie id>"].(string)); err != nil {
 				fmt.Printf("Error: %s\n", err)
 			}
 		} else {
 			query := strings.Join(arguments["<query>"].([]string), " ")
-			if err = ImdbSearch(query); err != nil {
+			if err = imdbSearch(query); err != nil {
 				fmt.Printf("Error: %s\n", err)
 			}
 		}
