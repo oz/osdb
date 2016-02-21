@@ -92,7 +92,7 @@ func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	}{}
 
 	if err := c.Call("SearchSubtitles", *params, &res); err != nil {
-		if !strings.Contains(err.Error(), "type mismatch") {
+		if strings.Contains(err.Error(), "type mismatch") {
 			return nil, err
 		}
 	}
