@@ -12,7 +12,7 @@ import (
 
 const (
 	DefaultOSDBServer = "http://api.opensubtitles.org/xml-rpc"
-	DefaultUserAgent  = "osdb-go 0.1"
+	DefaultUserAgent  = "osdb-go 0.2"
 	SearchLimit       = 100
 	StatusSuccess     = "200 OK"
 )
