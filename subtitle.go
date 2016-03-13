@@ -54,6 +54,7 @@ type Subtitle struct {
 	SubRating          string `xmlrpc:"SubRating"`
 	SubSize            string `xmlrpc:"SubSize"`
 	SubSumCD           string `xmlrpc:"SubSumCD"`
+	SubEncoding        string `xmlrpc:"SubEncoding"`
 	SubtitlesLink      string `xmlrpc:"SubtitlesLink"`
 	UserID             string `xmlrpc:"UserID"`
 	UserNickName       string `xmlrpc:"UserNickName"`

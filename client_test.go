@@ -122,3 +122,46 @@ func ExampleClient_DownloadSubtitles() {
 	// 99th line of subtitle 0: ...and he knew that unless
 	// 99th line of subtitle 1: and top it in many ways.
 }
+
+func ExampleClient_DownloadSubtitles_foreign() {
+	c, err := NewClient()
+	if err != nil {
+		fmt.Printf("can't create client: %s\n", err)
+		return
+	}
+
+	err = c.LogIn("", "", "")
+	if err != nil {
+		fmt.Printf("can't login: %s\n", err)
+		return
+	}
+
+	ids := []int{1955009224}
+
+	subFiles, err := c.DownloadSubtitles(ids)
+	if err != nil {
+		fmt.Printf("can't download subtitles: %s\n", err)
+		return
+	}
+
+	for i, sf := range subFiles {
+		reader, err := sf.Reader()
+		if err != nil {
+			fmt.Printf("can't open reader: %s\n", err)
+			return
+		}
+		scanner := bufio.NewScanner(reader)
+		for j := 0; j < 99; j++ {
+			if !scanner.Scan() {
+				fmt.Printf("too few lines in subtitle file\n")
+				return
+			}
+		}
+		if scanner.Scan() {
+			fmt.Printf("99th line of subtitle %d: %s\n", i, scanner.Text())
+		}
+	}
+
+	// Output:
+	// 100th line of subtitle 0: Хорошо. Скоро увидимся.
+}
