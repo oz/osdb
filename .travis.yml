@@ -3,6 +3,6 @@ language: go
 go:
   - 1.5
   - 1.6
-script: go test -v ./
+script: go test -v ./ -dvr.replay
 env:
   - GO15VENDOREXPERIMENT=1
