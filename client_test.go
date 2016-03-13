@@ -79,7 +79,7 @@ func ExampleClient_ImdbIdSearch() {
 	// 2816136: Game of Thrones Season 4- Fire and Ice Foreshadowing.srt
 }
 
-func ExampleClient_DownloadSubtitles() {
+func ExampleClient_DownloadSubtitlesByIds() {
 	c, err := NewClient()
 	if err != nil {
 		fmt.Printf("can't create client: %s\n", err)
@@ -94,7 +94,69 @@ func ExampleClient_DownloadSubtitles() {
 
 	ids := []int{1951968569, 1954123031}
 
-	subFiles, err := c.DownloadSubtitles(ids)
+	subFiles, err := c.DownloadSubtitlesByIds(ids)
+	if err != nil {
+		fmt.Printf("can't download subtitles: %s\n", err)
+		return
+	}
+
+	for i, sf := range subFiles {
+		reader, err := sf.Reader()
+		if err != nil {
+			fmt.Printf("can't open reader: %s\n", err)
+			return
+		}
+		scanner := bufio.NewScanner(reader)
+		for j := 0; j < 98; j++ {
+			if !scanner.Scan() {
+				fmt.Printf("too few lines in subtitle file\n")
+				return
+			}
+		}
+		if scanner.Scan() {
+			fmt.Printf("99th line of subtitle %d: %s\n", i, scanner.Text())
+		}
+	}
+
+	// Output:
+	// 99th line of subtitle 0: ...and he knew that unless
+	// 99th line of subtitle 1: and top it in many ways.
+}
+
+func ExampleClient_DownloadSubtitles() {
+	c, err := NewClient()
+	if err != nil {
+		fmt.Printf("can't create client: %s\n", err)
+		return
+	}
+
+	err = c.LogIn("", "", "")
+	if err != nil {
+		fmt.Printf("can't login: %s\n", err)
+		return
+	}
+
+	ids := []string{"0403358", "2816136"}
+	langs := []string{"eng", "rus"}
+
+	subs, err := c.ImdbIdSearch(ids, langs)
+	if err != nil {
+		fmt.Printf("can't search: %s\n", err)
+		return
+	}
+
+	// we now have a slice of subtitles for those two films in english and russian.
+
+	var testSubtitles Subtitles
+
+	for _, sub := range subs {
+		if sub.SubHash == "fb1a2837e1e6a4cceeb237154fac5f21" ||
+			sub.SubHash == "51988e72deb96e1d1abd79ac8daf4b3b" {
+			testSubtitles = append(testSubtitles, sub)
+		}
+	}
+
+	subFiles, err := c.DownloadSubtitles(testSubtitles)
 	if err != nil {
 		fmt.Printf("can't download subtitles: %s\n", err)
 		return
@@ -136,9 +198,24 @@ func ExampleClient_DownloadSubtitles_foreign() {
 		return
 	}
 
-	ids := []int{1955009224}
+	ids := []string{"0403358"}
+	langs := []string{"rus"}
 
-	subFiles, err := c.DownloadSubtitles(ids)
+	subs, err := c.ImdbIdSearch(ids, langs)
+	if err != nil {
+		fmt.Printf("can't search: %s\n", err)
+		return
+	}
+
+	var testSubtitles Subtitles
+
+	for _, sub := range subs {
+		if sub.SubHash == "2717a7ef9e3346f9353dc4e340e7bcb7" {
+			testSubtitles = append(testSubtitles, sub)
+		}
+	}
+
+	subFiles, err := c.DownloadSubtitles(testSubtitles)
 	if err != nil {
 		fmt.Printf("can't download subtitles: %s\n", err)
 		return
@@ -151,17 +228,17 @@ func ExampleClient_DownloadSubtitles_foreign() {
 			return
 		}
 		scanner := bufio.NewScanner(reader)
-		for j := 0; j < 99; j++ {
+		for j := 0; j < 21; j++ {
 			if !scanner.Scan() {
 				fmt.Printf("too few lines in subtitle file\n")
 				return
 			}
 		}
 		if scanner.Scan() {
-			fmt.Printf("99th line of subtitle %d: %s\n", i, scanner.Text())
+			fmt.Printf("22nd line of subtitle %d: %s\n", i, scanner.Text())
 		}
 	}
 
 	// Output:
-	// 100th line of subtitle 0: Хорошо. Скоро увидимся.
+	// 22nd line of subtitle 0: как звезд в небесах.
 }

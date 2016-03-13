@@ -194,7 +194,7 @@ func (c *Client) GetImdbMovieDetails(id string) (*Movie, error) {
 }
 
 // Download subtitles by file ID.
-func (c *Client) DownloadSubtitles(ids []int) ([]SubtitleFile, error) {
+func (c *Client) DownloadSubtitlesByIds(ids []int) ([]SubtitleFile, error) {
 	params := []interface{}{c.Token, ids}
 	res := struct {
 		Status string         `xmlrpc:"status"`
@@ -209,6 +209,19 @@ func (c *Client) DownloadSubtitles(ids []int) ([]SubtitleFile, error) {
 	return res.Data, nil
 }
 
+// Download subtitles in bulk
+func (c *Client) DownloadSubtitles(subtitles Subtitles) ([]SubtitleFile, error) {
+	ids := make([]int, len(subtitles))
+	for i := range subtitles {
+		id, err := strconv.Atoi(subtitles[i].IDSubtitleFile)
+		if err != nil {
+			return nil, fmt.Errorf("malformed subtitle ID: %s", err)
+		}
+		ids[i] = id
+	}
+	return c.DownloadSubtitlesByIds(ids)
+}
+
 // Save subtitle file to disk, using the OSDB specified name.
 func (c *Client) Download(s *Subtitle) error {
 	return c.DownloadTo(s, s.SubFileName)
@@ -216,13 +229,8 @@ func (c *Client) Download(s *Subtitle) error {
 
 // Save subtitle file to disk, using the specified path.
 func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
-	id, err := strconv.Atoi(s.IDSubtitleFile)
-	if err != nil {
-		return
-	}
-
 	// Download
-	files, err := c.DownloadSubtitles([]int{id})
+	files, err := c.DownloadSubtitles(Subtitles{*s})
 	if err != nil {
 		return
 	}
