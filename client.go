@@ -115,6 +115,68 @@ func (c *Client) SearchOnImdb(q string) (Movies, error) {
 	return res.Data, nil
 }
 
+// Search for the best matching movie for each of the hashes (only for <200)
+// Only returns ID, Title and Year
+func (c *Client) BestMoviesByHashes(hashes []uint64) ([]*Movie, error) {
+	hashStrings := make([]string, len(hashes))
+	for i, hash := range hashes {
+		hashStrings[i] = hashString(hash)
+	}
+
+	params := []interface{}{c.Token, hashStrings}
+	res := struct {
+		Status string                 `xmlrpc:"status"`
+		Data   map[string]interface{} `xmlrpc:"data"`
+	}{}
+
+	if err := c.Call("CheckMovieHash", params, &res); err != nil {
+		return nil, err
+	}
+
+	if res.Status != StatusSuccess {
+		return nil, fmt.Errorf("CheckMovieHash error: %s", res.Status)
+	}
+
+	movies := make([]*Movie, len(hashes))
+	for i, hashString := range hashStrings {
+		switch v := res.Data[hashString].(type) {
+		case []interface{}:
+			// this works around a bug (feature?) in the opensubtitles API:
+			// when a hash is missing in the database, the API returns
+			// an empty array instead of a null value or an empty map
+			movies[i] = nil
+		case map[string]interface{}:
+			// this is probably a movie
+			movie, err := movieFromMap(v)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"CheckMovieHash returned malformed data: %s", err,
+				)
+			}
+			movies[i] = movie
+		default:
+			return nil, fmt.Errorf("CheckMovieHash returned unknown data")
+		}
+	}
+
+	return movies, nil
+}
+
+func movieFromMap(values map[string]interface{}) (*Movie, error) {
+	movie := &Movie{}
+	var ok bool
+	if movie.Id, ok = values["MovieImdbID"].(string); !ok {
+		return nil, fmt.Errorf("movie has malformed IMDB ID")
+	}
+	if movie.Title, ok = values["MovieName"].(string); !ok {
+		return nil, fmt.Errorf("movie has malformed name")
+	}
+	if movie.Year, ok = values["MovieYear"].(string); !ok {
+		return nil, fmt.Errorf("movie has malformed year")
+	}
+	return movie, nil
+}
+
 // Get movie details from IMDB.
 func (c *Client) GetImdbMovieDetails(id string) (*Movie, error) {
 	params := []interface{}{c.Token, id}
@@ -287,10 +349,15 @@ func (c *Client) fileToParams(path string, langs []string) (*[]interface{}, erro
 			Size  int64  `xmlrpc:"moviebytesize"`
 			Langs string `xmlrpc:"sublanguageid"`
 		}{{
-			fmt.Sprintf("%x", h),
+			hashString(h),
 			size,
 			strings.Join(langs, ","),
 		}},
 	}
 	return &params, nil
+}
+
+// Create a string representation of hash
+func hashString(hash uint64) string {
+	return fmt.Sprintf("%016x", hash)
 }
