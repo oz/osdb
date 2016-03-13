@@ -12,7 +12,7 @@ import (
 )
 
 // Program version
-const VERSION = "0.1a"
+const VERSION = "0.2"
 
 // Get an anonymous client connected to OSDB.
 func getClient() (client *osdb.Client, err error) {
