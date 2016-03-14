@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/htmlindex"
+
 	"github.com/kolo/xmlrpc"
 )
 
@@ -219,7 +222,20 @@ func (c *Client) DownloadSubtitles(subtitles Subtitles) ([]SubtitleFile, error) 
 		}
 		ids[i] = id
 	}
-	return c.DownloadSubtitlesByIds(ids)
+
+	subtitleFiles, err := c.DownloadSubtitlesByIds(ids)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range subtitleFiles {
+		subtitleFiles[i].Encoding, err = encodingFromName(subtitles[i].SubEncoding)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return subtitleFiles, nil
 }
 
 // Save subtitle file to disk, using the OSDB specified name.
@@ -368,4 +384,10 @@ func (c *Client) fileToParams(path string, langs []string) (*[]interface{}, erro
 // Create a string representation of hash
 func hashString(hash uint64) string {
 	return fmt.Sprintf("%016x", hash)
+}
+
+// Tries to guess the character encoding by its name
+// (or whatever Opensubtitles thinks its name is)
+func encodingFromName(name string) (encoding.Encoding, error) {
+	return htmlindex.Get(name)
 }

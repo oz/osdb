@@ -10,6 +10,8 @@ import (
 	"path"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/encoding"
 )
 
 // A Subtitle with its many OSDB attributes...
@@ -77,9 +79,11 @@ func (subs Subtitles) Best() *Subtitle {
 // SubtitleFile contains file data as returned by OSDB's API, that is to
 // say: gzip-ped and base64-encoded text.
 type SubtitleFile struct {
-	Id     string `xmlrpc:"idsubtitlefile"`
-	Data   string `xmlrpc:"data"`
-	reader *gzip.Reader
+	Id         string `xmlrpc:"idsubtitlefile"`
+	Data       string `xmlrpc:"data"`
+	Encoding   encoding.Encoding
+	reader     *gzip.Reader
+	readerUTF8 io.Reader
 }
 
 // A Reader for the subtitle file contents (decoded, and decompressed).
@@ -92,6 +96,26 @@ func (sf *SubtitleFile) Reader() (r *gzip.Reader, err error) {
 	sf.reader, err = gzip.NewReader(dec)
 
 	return sf.reader, err
+}
+
+// A Reader for the subtitle file contents
+// (decoded, decompressed and converted to UTF-8).
+func (sf *SubtitleFile) ReaderUTF8() (r io.Reader, err error) {
+	if sf.readerUTF8 != nil {
+		return sf.readerUTF8, err
+	}
+
+	if sf.Encoding == nil {
+		sf.readerUTF8, err = sf.Reader()
+	} else {
+		reader, err := sf.Reader()
+		if err != nil {
+			return nil, err
+		}
+		sf.readerUTF8 = sf.Encoding.NewDecoder().Reader(reader)
+	}
+
+	return sf.readerUTF8, err
 }
 
 // Build a Subtitle struct for a file, suitable for osdb.HasSubtitles()

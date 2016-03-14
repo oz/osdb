@@ -1,8 +1,12 @@
+// +build live
+
 package osdb
 
 import (
 	"bufio"
 	"fmt"
+	"testing"
+	"time"
 
 	_ "github.com/orchestrate-io/dvr"
 )
@@ -54,9 +58,10 @@ func ExampleClient_ImdbIdSearch() {
 		return
 	}
 
-	ids := []string{"0403358", "2816136"}
+	ids := []string{"0403358"}
 	langs := []string{"eng", "rus"}
 
+	time.Sleep(1 * time.Second)
 	subs, err := c.ImdbIdSearch(ids, langs)
 	if err != nil {
 		fmt.Printf("can't search: %s\n", err)
@@ -64,10 +69,9 @@ func ExampleClient_ImdbIdSearch() {
 	}
 
 	for _, sub := range subs {
-		if sub.SubHash == "fb1a2837e1e6a4cceeb237154fac5f21" ||
-			sub.SubHash == "51988e72deb96e1d1abd79ac8daf4b3b" {
+		if sub.SubHash == "fb1a2837e1e6a4cceeb237154fac5f21" {
 
-			// check if that couple of top rated subtitles have been returned
+			// check if that top rated subtitle have been returned
 			fmt.Printf("%s: %s\n", sub.IDMovieImdb, sub.SubFileName)
 		}
 	}
@@ -76,7 +80,30 @@ func ExampleClient_ImdbIdSearch() {
 
 	// Output:
 	// 403358: Night.Watch.2004.720p.BluRay.x264-SiNNERS.srt
-	// 2816136: Game of Thrones Season 4- Fire and Ice Foreshadowing.srt
+}
+
+func TestImdbIdSearchManyTimes(t *testing.T) {
+	c, err := NewClient()
+	if err != nil {
+		fmt.Printf("can't create client: %s\n", err)
+		return
+	}
+
+	err = c.LogIn("", "", "")
+	if err != nil {
+		fmt.Printf("can't login: %s\n", err)
+		return
+	}
+
+	ids := []string{"0403358", "2816136"}
+	langs := []string{"eng", "rus"}
+
+	for i := 0; i < 3; i++ {
+		_, err := c.ImdbIdSearch(ids, langs)
+		if err != nil {
+			t.Fail()
+		}
+	}
 }
 
 func ExampleClient_DownloadSubtitlesByIds() {
@@ -222,7 +249,7 @@ func ExampleClient_DownloadSubtitles_foreign() {
 	}
 
 	for i, sf := range subFiles {
-		reader, err := sf.Reader()
+		reader, err := sf.ReaderUTF8()
 		if err != nil {
 			fmt.Printf("can't open reader: %s\n", err)
 			return
