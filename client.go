@@ -229,9 +229,12 @@ func (c *Client) DownloadSubtitles(subtitles Subtitles) ([]SubtitleFile, error) 
 	}
 
 	for i := range subtitleFiles {
-		subtitleFiles[i].Encoding, err = encodingFromName(subtitles[i].SubEncoding)
-		if err != nil {
-			return nil, err
+		encodingName := subtitles[i].SubEncoding
+		if encodingName != "" {
+			subtitleFiles[i].Encoding, err = encodingFromName(subtitles[i].SubEncoding)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

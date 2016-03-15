@@ -249,7 +249,7 @@ func ExampleClient_DownloadSubtitles_foreign() {
 	}
 
 	for i, sf := range subFiles {
-		reader, err := sf.ReaderUTF8()
+		reader, err := sf.Reader()
 		if err != nil {
 			fmt.Printf("can't open reader: %s\n", err)
 			return
