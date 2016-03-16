@@ -10,6 +10,8 @@ import (
 	"path"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/encoding"
 )
 
 // A Subtitle with its many OSDB attributes...
@@ -54,6 +56,7 @@ type Subtitle struct {
 	SubRating          string `xmlrpc:"SubRating"`
 	SubSize            string `xmlrpc:"SubSize"`
 	SubSumCD           string `xmlrpc:"SubSumCD"`
+	SubEncoding        string `xmlrpc:"SubEncoding"`
 	SubtitlesLink      string `xmlrpc:"SubtitlesLink"`
 	UserID             string `xmlrpc:"UserID"`
 	UserNickName       string `xmlrpc:"UserNickName"`
@@ -76,21 +79,36 @@ func (subs Subtitles) Best() *Subtitle {
 // SubtitleFile contains file data as returned by OSDB's API, that is to
 // say: gzip-ped and base64-encoded text.
 type SubtitleFile struct {
-	Id     string `xmlrpc:"idsubtitlefile"`
-	Data   string `xmlrpc:"data"`
-	reader *gzip.Reader
+	Id       string `xmlrpc:"idsubtitlefile"`
+	Data     string `xmlrpc:"data"`
+	Encoding encoding.Encoding
+	reader   io.ReadCloser
 }
 
-// A Reader for the subtitle file contents (decoded, and decompressed).
-func (sf *SubtitleFile) Reader() (r *gzip.Reader, err error) {
+// A Reader for the subtitle file contents
+// (decoded, decompressed and converted to UTF-8).
+// Note: If Encoding is not present, the subtitle data will be presented as is.
+func (sf *SubtitleFile) Reader() (r io.ReadCloser, err error) {
 	if sf.reader != nil {
 		return sf.reader, err
 	}
 
 	dec := base64.NewDecoder(base64.StdEncoding, strings.NewReader(sf.Data))
-	sf.reader, err = gzip.NewReader(dec)
+	gzReader, err := gzip.NewReader(dec)
+	if err != nil {
+		return nil, err
+	}
 
-	return sf.reader, err
+	if sf.Encoding == nil {
+		sf.reader = gzReader
+	} else {
+		sf.reader = newCloseableReader(
+			sf.Encoding.NewDecoder().Reader(gzReader),
+			gzReader.Close,
+		)
+	}
+
+	return sf.reader, nil
 }
 
 // Build a Subtitle struct for a file, suitable for osdb.HasSubtitles()
@@ -146,4 +164,20 @@ func (subs *Subtitles) toUploadParams() (map[string]interface{}, error) {
 	}
 
 	return subMap, nil
+}
+
+// Implement io.ReadCloser by wrapping io.Reader
+type closeableReader struct {
+	io.Reader
+	close func() error
+}
+
+// Close the reader by calling a preset close function
+func (c *closeableReader) Close() error {
+	return c.close()
+}
+
+// Create a ReadCloser which will read from r and call close() upon closing
+func newCloseableReader(r io.Reader, close func() error) io.ReadCloser {
+	return &closeableReader{r, close}
 }
