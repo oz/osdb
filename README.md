@@ -1,17 +1,18 @@
 [![Build Status](https://travis-ci.org/oz/osdb.svg?branch=master)](https://travis-ci.org/oz/osdb)
 
-This is a Go client, and library for
-[OpenSubtitles](http://opensubtitles.org/).
+This is a Golang client for [Open Subtitles](http://opensubtitles.org/).
 
-This project has not reached version `0.1` yet, and it will change in many
-breaking ways. But of course, you are welcome to check it out, and participate:
-report issues when you find those, or check the "TODO" section down there.
+This project allows you to search and download subtitles from Open
+Subtitles. If you are only interested in searching or downloading then
+you should find what you need from the latest releases, otherwise the
+[TODO](https://github.com/oz/osdb#todo) section highlights what
+remains to be done regarding API coverage.
 
 
-# Install
+# Installation
 
-If you are only interested in (yet another) CLI interface for OpenSubtitles,
-then install the latest [Go](http://golang.org) release, and run:
+If you need (yet another) CLI interface for Open Subtitles, then
+install the latest [Go](http://golang.org) release, and run:
 
 ```
 go get github.com/oz/osdb && go install github.com/oz/osdb/cmd/osdb
@@ -31,7 +32,7 @@ Usage:
     osdb --version
 ```
 
-Hence, to try to download french or english subtitles for a sample file:
+Hence, to download French or English subtitles for a sample file:
 
 ```
 $ osdb get --lang fra,eng sample.avi
@@ -93,8 +94,7 @@ if err != nil {
 	// ...
 }
 
-err := c.LogIn("user", "password", "language")
-if err != nil {
+if err = c.LogIn("user", "password", "language"); err != nil {
 	// ...
 }
 // c.Token is now set, and subsequent API calls will not be refused.
