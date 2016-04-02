@@ -1,5 +1,5 @@
 /*
-An API client for opensubtitles.org
+Package osdb is an API client for opensubtitles.org
 
 This is a client for the OSDb protocol. Currently the package only allows movie
 identification, subtitles search, and download.
@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	ChunkSize = 65536 // 64k
+	// ChunkSize = 64k
+	ChunkSize = 65536
 )
 
-// Allocate a new OSDB client
+// NewClient allocates a new OSDB client.
 func NewClient() (*Client, error) {
 	osdbServer := os.Getenv("OSDB_SERVER")
 	if osdbServer == "" {
@@ -38,7 +39,7 @@ func NewClient() (*Client, error) {
 	return c, nil
 }
 
-// Generate an OSDB hash for an *os.File.
+// HashFile generates an OSDB hash for an *os.File.
 func HashFile(file *os.File) (hash uint64, err error) {
 	fi, err := file.Stat()
 	if err != nil {
@@ -73,7 +74,7 @@ func HashFile(file *os.File) (hash uint64, err error) {
 	return hash + uint64(fi.Size()), nil
 }
 
-// Generate a OSDB hash for a file.
+// Hash generates an OSDB hash for a file.
 func Hash(path string) (uint64, error) {
 	file, err := os.Open(path)
 	if err != nil {

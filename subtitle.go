@@ -64,11 +64,12 @@ type Subtitle struct {
 	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
 }
 
-// A collection of subtitles
+// Subtitles is a collection of subtitles.
 type Subtitles []Subtitle
 
-// The best subtitle of the collection, for some definition of "best" at
-// least.
+// Best finds the best subsitle in a Subtitles collection. Of course
+// "best" is hardly an absolute concept: here, we just take the first
+// that OSDB returned.
 func (subs Subtitles) Best() *Subtitle {
 	if len(subs) > 0 {
 		return &subs[0]
@@ -79,15 +80,15 @@ func (subs Subtitles) Best() *Subtitle {
 // SubtitleFile contains file data as returned by OSDB's API, that is to
 // say: gzip-ped and base64-encoded text.
 type SubtitleFile struct {
-	Id       string `xmlrpc:"idsubtitlefile"`
+	ID       string `xmlrpc:"idsubtitlefile"`
 	Data     string `xmlrpc:"data"`
 	Encoding encoding.Encoding
 	reader   io.ReadCloser
 }
 
-// A Reader for the subtitle file contents
-// (decoded, decompressed and converted to UTF-8).
-// Note: If Encoding is not present, the subtitle data will be presented as is.
+// Reader interface for SubtitleFile. Subtitle's contents are
+// decompressed, and usually encoded to UTF-8: if encoding info is
+// missing, no re-encoding is done.
 func (sf *SubtitleFile) Reader() (r io.ReadCloser, err error) {
 	if sf.reader != nil {
 		return sf.reader, err
@@ -111,39 +112,39 @@ func (sf *SubtitleFile) Reader() (r io.ReadCloser, err error) {
 	return sf.reader, nil
 }
 
-// Build a Subtitle struct for a file, suitable for osdb.HasSubtitles()
-func NewSubtitleWithFile(movie_file string, sub_file string) (s Subtitle, err error) {
-	s.SubFileName = path.Base(sub_file)
+// NewSubtitleWithFile builds a Subtitle for a file, intended to be used with for osdb.HasSubtitles()
+func NewSubtitleWithFile(movieFile string, subFile string) (s Subtitle, err error) {
+	s.SubFileName = path.Base(subFile)
 	// Compute md5 sum
-	sub_io, err := os.Open(sub_file)
+	subIO, err := os.Open(subFile)
 	if err != nil {
 		return
 	}
-	defer sub_io.Close()
+	defer subIO.Close()
 	h := md5.New()
-	_, err = io.Copy(h, sub_io)
+	_, err = io.Copy(h, subIO)
 	if err != nil {
 		return
 	}
 	s.SubHash = fmt.Sprintf("%x", h.Sum(nil))
 
 	// Movie filename, byte-size, & hash.
-	s.MovieFileName = path.Base(movie_file)
-	movie_io, err := os.Open(movie_file)
+	s.MovieFileName = path.Base(movieFile)
+	movieIO, err := os.Open(movieFile)
 	if err != nil {
 		return
 	}
-	defer movie_io.Close()
-	stat, err := movie_io.Stat()
+	defer movieIO.Close()
+	stat, err := movieIO.Stat()
 	if err != nil {
 		return
 	}
 	s.MovieByteSize = strconv.FormatInt(stat.Size(), 10)
-	movie_hash, err := HashFile(movie_io)
+	movieHash, err := HashFile(movieIO)
 	if err != nil {
 		return
 	}
-	s.MovieHash = fmt.Sprintf("%x", movie_hash)
+	s.MovieHash = fmt.Sprintf("%x", movieHash)
 	return
 }
 

@@ -14,12 +14,20 @@ import (
 )
 
 const (
-	DefaultOSDBServer = "http://api.opensubtitles.org/xml-rpc"
-	DefaultUserAgent  = "osdb-go 0.2"
-	SearchLimit       = 100
-	StatusSuccess     = "200 OK"
+	// DefaultOSDBServer is OSDB's API base URL.
+	DefaultOSDBServer = "https://api.opensubtitles.org:443/xml-rpc"
+
+	// DefaultUserAgent is the current version of this lib.
+	DefaultUserAgent = "osdb-go 0.2"
+
+	// SearchLimit = nax hits per search
+	SearchLimit = 100
+
+	// StatusSuccess is the successful response status for API calls.
+	StatusSuccess = "200 OK"
 )
 
+// Client wraps an XML-RPC client to connect to OSDB.
 type Client struct {
 	UserAgent string
 	Token     string
@@ -29,8 +37,9 @@ type Client struct {
 	*xmlrpc.Client
 }
 
+// Movie is a type that stores the information from IMDB searches.
 type Movie struct {
-	Id             string            `xmlrpc:"id"`
+	ID             string            `xmlrpc:"id"`
 	Title          string            `xmlrpc:"title"`
 	Cover          string            `xmlrpc:"cover"`
 	Year           string            `xmlrpc:"year"`
@@ -49,14 +58,15 @@ type Movie struct {
 	Certifications []string          `xmlrpc:"certification"`
 }
 
-// A collection of movies.
+// Movies is just a slice of movies.
 type Movies []Movie
 
+// Empty checks whether Movies is empty.
 func (m Movies) Empty() bool {
 	return len(m) == 0
 }
 
-// Search subtitles matching a file hash.
+// FileSearch searches subtitles for a file and list of languages.
 func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	// Hash file, and other params values.
 	params, err := c.fileToParams(path, langs)
@@ -66,8 +76,8 @@ func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	return c.SearchSubtitles(params)
 }
 
-// Search subtitles matching IMDB IDs.
-func (c *Client) ImdbIdSearch(ids []string, langs []string) (Subtitles, error) {
+// IMDBSearchByID searches subtitles that match some IMDB IDs.
+func (c *Client) IMDBSearchByID(ids []string, langs []string) (Subtitles, error) {
 	// OSDB search params struct
 	params := []interface{}{
 		c.Token,
@@ -75,11 +85,11 @@ func (c *Client) ImdbIdSearch(ids []string, langs []string) (Subtitles, error) {
 	}
 
 	// Convert ids []string into a slice of map[string]string for search. Ouch!
-	for _, imdbId := range ids {
+	for _, imdbID := range ids {
 		params[1] = append(
 			params[1].([]map[string]string),
 			map[string]string{
-				"imdbid":        imdbId,
+				"imdbid":        imdbID,
 				"sublanguageid": strings.Join(langs, ","),
 			},
 		)
@@ -88,7 +98,7 @@ func (c *Client) ImdbIdSearch(ids []string, langs []string) (Subtitles, error) {
 	return c.SearchSubtitles(&params)
 }
 
-// Search Subtitles, DIY method.
+// SearchSubtitles searches OSDB with your own parameters.
 func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	res := struct {
 		Data Subtitles `xmlrpc:"data"`
@@ -102,8 +112,8 @@ func (c *Client) SearchSubtitles(params *[]interface{}) (Subtitles, error) {
 	return res.Data, nil
 }
 
-// Search movies on IMDB.
-func (c *Client) SearchOnImdb(q string) (Movies, error) {
+// IMDBSearch searches movies on IMDB.
+func (c *Client) IMDBSearch(q string) (Movies, error) {
 	params := []interface{}{c.Token, q}
 	res := struct {
 		Status string `xmlrpc:"status"`
@@ -118,8 +128,9 @@ func (c *Client) SearchOnImdb(q string) (Movies, error) {
 	return res.Data, nil
 }
 
-// Search for the best matching movie for each of the hashes (only for <200)
-// Only returns ID, Title and Year
+// BestMoviesByHashes searches for the best matching movies for each
+// of the hashes (only for <200). This returns incomplete Movies, with
+// the following fields only: ID, Title and Year.
 func (c *Client) BestMoviesByHashes(hashes []uint64) ([]*Movie, error) {
 	hashStrings := make([]string, len(hashes))
 	for i, hash := range hashes {
@@ -168,7 +179,7 @@ func (c *Client) BestMoviesByHashes(hashes []uint64) ([]*Movie, error) {
 func movieFromMap(values map[string]interface{}) (*Movie, error) {
 	movie := &Movie{}
 	var ok bool
-	if movie.Id, ok = values["MovieImdbID"].(string); !ok {
+	if movie.ID, ok = values["MovieImdbID"].(string); !ok {
 		return nil, fmt.Errorf("movie has malformed IMDB ID")
 	}
 	if movie.Title, ok = values["MovieName"].(string); !ok {
@@ -180,8 +191,8 @@ func movieFromMap(values map[string]interface{}) (*Movie, error) {
 	return movie, nil
 }
 
-// Get movie details from IMDB.
-func (c *Client) GetImdbMovieDetails(id string) (*Movie, error) {
+// GetIMDBMovieDetails fetches movie details from IMDB by ID.
+func (c *Client) GetIMDBMovieDetails(id string) (*Movie, error) {
 	params := []interface{}{c.Token, id}
 	res := struct {
 		Status string `xmlrpc:"status"`
@@ -196,7 +207,7 @@ func (c *Client) GetImdbMovieDetails(id string) (*Movie, error) {
 	return &res.Data, nil
 }
 
-// Download subtitles by file ID.
+// DownloadSubtitlesByIds downloads subtitles by ID.
 func (c *Client) DownloadSubtitlesByIds(ids []int) ([]SubtitleFile, error) {
 	params := []interface{}{c.Token, ids}
 	res := struct {
@@ -212,7 +223,7 @@ func (c *Client) DownloadSubtitlesByIds(ids []int) ([]SubtitleFile, error) {
 	return res.Data, nil
 }
 
-// Download subtitles in bulk
+// DownloadSubtitles downloads subtitles in bulk.
 func (c *Client) DownloadSubtitles(subtitles Subtitles) ([]SubtitleFile, error) {
 	ids := make([]int, len(subtitles))
 	for i := range subtitles {
@@ -241,12 +252,12 @@ func (c *Client) DownloadSubtitles(subtitles Subtitles) ([]SubtitleFile, error) 
 	return subtitleFiles, nil
 }
 
-// Save subtitle file to disk, using the OSDB specified name.
+// Download saves a subtitle file to disk, using the OSDB specified name.
 func (c *Client) Download(s *Subtitle) error {
 	return c.DownloadTo(s, s.SubFileName)
 }
 
-// Save subtitle file to disk, using the specified path.
+// DownloadTo saves a subtitle file to the specified path.
 func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	// Download
 	files, err := c.DownloadSubtitles(Subtitles{*s})
@@ -274,19 +285,19 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	return
 }
 
-// Checks whether OSDB already has subtitles for a movie and subtitle
-// files.
-func (c *Client) HasSubtitlesForFiles(movie_file string, sub_file string) (bool, error) {
-	subtitle, err := NewSubtitleWithFile(movie_file, sub_file)
+// HasSubtitlesForFiles checks whether OSDB already has subtitles for
+// a movie and subtitle files.
+func (c *Client) HasSubtitlesForFiles(movieFile string, subFile string) (bool, error) {
+	subtitle, err := NewSubtitleWithFile(movieFile, subFile)
 	if err != nil {
 		return true, err
 	}
 	return c.HasSubtitles(Subtitles{subtitle})
 }
 
-// Checks whether subtitles already exists in OSDB. The mandatory fields in the
-// received Subtitle slice are: SubHash, SubFileName, MovieHash, MovieByteSize,
-// and MovieFileName.
+// HasSubtitles checks whether subtitles already exists in OSDB. The
+// mandatory fields in the received Subtitle slice are: SubHash,
+// SubFileName, MovieHash, MovieByteSize, and MovieFileName.
 func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
 	subArgs, err := subs.toUploadParams()
 	if err != nil {
@@ -307,7 +318,7 @@ func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
 	return res.Exists == 1, nil
 }
 
-// Keep session alive
+// Noop keeps a session alive.
 func (c *Client) Noop() (err error) {
 	res := struct {
 		Status string `xmlrpc:"status"`
@@ -319,7 +330,7 @@ func (c *Client) Noop() (err error) {
 	return
 }
 
-// Login to the API, and return a session token.
+// LogIn to the API, and return a session token.
 func (c *Client) LogIn(user string, pass string, lang string) (err error) {
 	c.Login = user
 	c.Password = pass
@@ -340,7 +351,7 @@ func (c *Client) LogIn(user string, pass string, lang string) (err error) {
 	return
 }
 
-// Logout...
+// LogOut ...
 func (c *Client) LogOut() (err error) {
 	args := []interface{}{c.Token}
 	res := struct {

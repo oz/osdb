@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/oz/osdb"
 	"github.com/docopt/docopt-go"
+	"github.com/oz/osdb"
 )
 
 // Program version
@@ -81,7 +81,7 @@ func imdbSearch(q string) error {
 	}
 
 	fmt.Printf("Searching %s on IMDB...\n\n", q)
-	movies, err := client.SearchOnImdb(q)
+	movies, err := client.IMDBSearch(q)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func imdbSearch(q string) error {
 		fmt.Println("No results.")
 	}
 	for _, m := range movies {
-		fmt.Printf("%s %s http://www.imdb.com/title/tt%s/\n", m.Id, m.Title, m.Id)
+		fmt.Printf("%s %s http://www.imdb.com/title/tt%s/\n", m.ID, m.Title, m.ID)
 	}
 	return nil
 }
@@ -101,13 +101,13 @@ func imdbShow(id string) error {
 		return err
 	}
 
-	m, err := client.GetImdbMovieDetails(id)
+	m, err := client.GetIMDBMovieDetails(id)
 	if err != nil {
 		return err
 	}
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	fmt.Fprintf(w, "IMDB Id:\t%s\n", m.Id)
+	fmt.Fprintf(w, "IMDB Id:\t%s\n", m.ID)
 	fmt.Fprintf(w, "Title:\t%s\n", m.Title)
 	fmt.Fprintf(w, "Year:\t%s\n", m.Year)
 	fmt.Fprintf(w, "Duration:\t%s\n", m.Duration)

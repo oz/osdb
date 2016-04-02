@@ -11,7 +11,7 @@ import (
 	_ "github.com/orchestrate-io/dvr"
 )
 
-func ExampleClient_BestMovieByHashes() {
+func ExampleClient_BestMoviesByHashes() {
 	c, err := NewClient()
 	if err != nil {
 		fmt.Printf("can't create client: %s\n", err)
@@ -34,7 +34,7 @@ func ExampleClient_BestMovieByHashes() {
 	for i, hash := range hashes {
 		if movies[i] != nil {
 			fmt.Printf("%016x: %s (%s) - id %s\n", hash,
-				movies[i].Title, movies[i].Year, movies[i].Id)
+				movies[i].Title, movies[i].Year, movies[i].ID)
 		} else {
 			fmt.Printf("%016x: unknown\n", hash)
 		}
@@ -45,7 +45,7 @@ func ExampleClient_BestMovieByHashes() {
 	// 46e33be00464c12e: "Game of Thrones" Two Swords (2014) - id 2816136
 }
 
-func ExampleClient_ImdbIdSearch() {
+func ExampleClient_IMDBSearchByID() {
 	c, err := NewClient()
 	if err != nil {
 		fmt.Printf("can't create client: %s\n", err)
@@ -62,7 +62,7 @@ func ExampleClient_ImdbIdSearch() {
 	langs := []string{"eng", "rus"}
 
 	time.Sleep(1 * time.Second)
-	subs, err := c.ImdbIdSearch(ids, langs)
+	subs, err := c.IMDBSearchByID(ids, langs)
 	if err != nil {
 		fmt.Printf("can't search: %s\n", err)
 		return
@@ -82,7 +82,7 @@ func ExampleClient_ImdbIdSearch() {
 	// 403358: Night.Watch.2004.720p.BluRay.x264-SiNNERS.srt
 }
 
-func TestImdbIdSearchManyTimes(t *testing.T) {
+func TestIMDBSearchByIDManyTimes(t *testing.T) {
 	c, err := NewClient()
 	if err != nil {
 		fmt.Printf("can't create client: %s\n", err)
@@ -99,7 +99,7 @@ func TestImdbIdSearchManyTimes(t *testing.T) {
 	langs := []string{"eng", "rus"}
 
 	for i := 0; i < 3; i++ {
-		_, err := c.ImdbIdSearch(ids, langs)
+		_, err := c.IMDBSearchByID(ids, langs)
 		if err != nil {
 			t.Fail()
 		}
@@ -166,7 +166,7 @@ func ExampleClient_DownloadSubtitles() {
 	ids := []string{"0403358", "2816136"}
 	langs := []string{"eng", "rus"}
 
-	subs, err := c.ImdbIdSearch(ids, langs)
+	subs, err := c.IMDBSearchByID(ids, langs)
 	if err != nil {
 		fmt.Printf("can't search: %s\n", err)
 		return
@@ -228,7 +228,7 @@ func ExampleClient_DownloadSubtitles_foreign() {
 	ids := []string{"0403358"}
 	langs := []string{"rus"}
 
-	subs, err := c.ImdbIdSearch(ids, langs)
+	subs, err := c.IMDBSearchByID(ids, langs)
 	if err != nil {
 		fmt.Printf("can't search: %s\n", err)
 		return
