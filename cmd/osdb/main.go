@@ -121,15 +121,17 @@ func imdbShow(id string) error {
 }
 
 func main() {
-	usage := `OSDB, an OpenSubtitles client.
+	usage := `
+OSDB, an OpenSubtitles client.
 
 Usage:
-	osdb get [--lang=<lang>] <file>
-	osdb (put|upload) <movie_file> <sub_file>
-	osdb imdb show <movie id>
-	osdb imdb <query>...
-	osdb -h | --help
-	osdb --version
+  osdb get [--lang=<lang>] <file>
+  osdb (put|upload) <movie_file> <sub_file>
+  osdb hash <file>
+  osdb imdb show <movie id>
+  osdb imdb <query>...
+  osdb -h | --help
+  osdb --version
 
 Options:
 	--lang=<lang>	Subtitles' languages, comma separated [default: ENG].
@@ -179,6 +181,15 @@ Options:
 			if err = imdbSearch(query); err != nil {
 				fmt.Printf("Error: %s\n", err)
 			}
+		}
+	}
+
+	if arguments["hash"] == true {
+		h, err := osdb.Hash(arguments["<file>"].(string))
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+		} else {
+			fmt.Printf("%x", h)
 		}
 	}
 }
