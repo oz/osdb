@@ -1,6 +1,7 @@
 package osdb
 
 import (
+	"bytes"
 	"compress/gzip"
 	"crypto/md5"
 	"encoding/base64"
@@ -63,6 +64,35 @@ type Subtitle struct {
 	UserNickName       string `xmlrpc:"UserNickName"`
 	UserRank           string `xmlrpc:"UserRank"`
 	ZipDownloadLink    string `xmlrpc:"ZipDownloadLink"`
+	subFilePath        string
+}
+
+func (s *Subtitle) toUploadParams() map[string]string {
+	return map[string]string{
+		"subhash":       s.SubHash,
+		"subfilename":   s.SubFileName,
+		"moviehash":     s.MovieHash,
+		"moviebytesize": s.MovieByteSize,
+		"moviefilename": s.MovieFileName,
+	}
+}
+
+func (s *Subtitle) encodeFile() (string, error) {
+	fh, err := os.Open(s.subFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer fh.Close()
+	dest := bytes.NewBuffer([]byte{})
+	gzWriter := gzip.NewWriter(dest)
+	enc := base64.NewEncoder(base64.StdEncoding, gzWriter)
+	_, err = io.Copy(enc, fh)
+	if err != nil {
+		return "", err
+	}
+	// XXX DEBUG
+	fmt.Println("upload content size:", dest.Len())
+	return dest.String(), nil
 }
 
 // Subtitles is a collection of subtitles.
@@ -131,11 +161,29 @@ func (sf *SubtitleFile) Reader() (r io.ReadCloser, err error) {
 	return sf.reader, nil
 }
 
-// NewSubtitleWithFile builds a Subtitle for a file, intended to be used with for osdb.HasSubtitles()
-func NewSubtitleWithFile(movieFile string, subFile string) (s Subtitle, err error) {
-	s.SubFileName = path.Base(subFile)
+// NewSubtitles builds a Subtitles from a movie path and a slice of
+// subtitles paths. Intended to be used with for osdb.HasSubtitles() and
+// osdb.UploadSubtitles().
+func NewSubtitles(moviePath string, subPaths []string) (Subtitles, error) {
+	subs := Subtitles{}
+	for _, subPath := range subPaths {
+		sub, err := NewSubtitle(moviePath, subPath)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, sub)
+	}
+	return subs, nil
+}
+
+// NewSubtitle builds a Subtitle from a movie and subtitle file path.
+// Intended to be used with for osdb.HasSubtitles() and
+// osdb.UploadSubtitles().
+func NewSubtitle(moviePath string, subPath string) (s Subtitle, err error) {
+	s.subFilePath = subPath
+	s.SubFileName = path.Base(subPath)
 	// Compute md5 sum
-	subIO, err := os.Open(subFile)
+	subIO, err := os.Open(subPath)
 	if err != nil {
 		return
 	}
@@ -148,8 +196,8 @@ func NewSubtitleWithFile(movieFile string, subFile string) (s Subtitle, err erro
 	s.SubHash = fmt.Sprintf("%x", h.Sum(nil))
 
 	// Movie filename, byte-size, & hash.
-	s.MovieFileName = path.Base(movieFile)
-	movieIO, err := os.Open(movieFile)
+	s.MovieFileName = path.Base(moviePath)
+	movieIO, err := os.Open(moviePath)
 	if err != nil {
 		return
 	}
@@ -167,19 +215,28 @@ func NewSubtitleWithFile(movieFile string, subFile string) (s Subtitle, err erro
 	return
 }
 
-// Convert Subtitle to a map[string]string{}, because OSDB requires a
-// specific structure to match subtitles when uploading (or trying to).
+// Serialize Subtitle to OSDB's XMLRPC params when trying to upload.
+func (subs *Subtitles) toTryUploadParams() (map[string]interface{}, error) {
+	subMap := map[string]interface{}{}
+	for i, s := range *subs {
+		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
+		subMap[key] = s.toUploadParams()
+	}
+
+	return subMap, nil
+}
+
+// Serialize Subtitle to OSDB's XMLRPC params when uploading.
 func (subs *Subtitles) toUploadParams() (map[string]interface{}, error) {
 	subMap := map[string]interface{}{}
 	for i, s := range *subs {
 		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
-		param := map[string]string{
-			"subhash":       s.SubHash,
-			"subfilename":   s.SubFileName,
-			"moviehash":     s.MovieHash,
-			"moviebytesize": s.MovieByteSize,
-			"moviefilename": s.MovieFileName,
+		param := s.toUploadParams()
+		encoded, err := s.encodeFile()
+		if err != nil {
+			return nil, err
 		}
+		param["subcontent"] = encoded
 		subMap[key] = param
 	}
 

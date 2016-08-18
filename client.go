@@ -69,7 +69,7 @@ func (m Movies) Empty() bool {
 // FileSearch searches subtitles for a file and list of languages.
 func (c *Client) FileSearch(path string, langs []string) (Subtitles, error) {
 	// Hash file, and other params values.
-	params, err := c.fileToParams(path, langs)
+	params, err := c.fileToSearchParams(path, langs)
 	if err != nil {
 		return nil, err
 	}
@@ -285,21 +285,11 @@ func (c *Client) DownloadTo(s *Subtitle, path string) (err error) {
 	return
 }
 
-// HasSubtitlesForFiles checks whether OSDB already has subtitles for
-// a movie and subtitle files.
-func (c *Client) HasSubtitlesForFiles(movieFile string, subFile string) (bool, error) {
-	subtitle, err := NewSubtitleWithFile(movieFile, subFile)
-	if err != nil {
-		return true, err
-	}
-	return c.HasSubtitles(Subtitles{subtitle})
-}
-
 // HasSubtitles checks whether subtitles already exists in OSDB. The
 // mandatory fields in the received Subtitle slice are: SubHash,
 // SubFileName, MovieHash, MovieByteSize, and MovieFileName.
 func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
-	subArgs, err := subs.toUploadParams()
+	subArgs, err := subs.toTryUploadParams()
 	if err != nil {
 		return true, err
 	}
@@ -316,6 +306,31 @@ func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
 	}
 
 	return res.Exists == 1, nil
+}
+
+// UploadSubtitles uploads subtitles.
+// mandatory fields in the received Subtitle slice are: SubHash,
+// SubFileName, MovieHash, MovieByteSize, and MovieFileName.
+func (c *Client) UploadSubtitles(subs Subtitles) (string, error) {
+	fmt.Println("Uploading subs")
+	subArgs, err := subs.toUploadParams()
+	if err != nil {
+		return "", err
+	}
+	return "", fmt.Errorf("WIP")
+	args := []interface{}{c.Token, subArgs}
+	res := struct {
+		Status string `xmlrpc:"status"`
+		URL    string `xmlrpc:"data"`
+	}{}
+	if err := c.Call("UploadSubtitles", args, &res); err != nil {
+		return "", err
+	}
+	if res.Status != StatusSuccess {
+		return "", fmt.Errorf("UploadSubtitles: %s", res.Status)
+	}
+
+	return res.URL, nil
 }
 
 // Noop keeps a session alive.
@@ -361,7 +376,7 @@ func (c *Client) LogOut() (err error) {
 }
 
 // Build query parameters for hash-based movie search.
-func (c *Client) fileToParams(path string, langs []string) (*[]interface{}, error) {
+func (c *Client) fileToSearchParams(path string, langs []string) (*[]interface{}, error) {
 	// File size
 	file, err := os.Open(path)
 	if err != nil {
