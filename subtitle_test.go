@@ -16,15 +16,16 @@ func TestBestWithNoResults(t *testing.T) {
 
 func TestBestWithResults(t *testing.T) {
 	subs := Subtitles{
-		Subtitle{MovieName: "Go"},
-		Subtitle{MovieName: "Never Let Me Go"},
+		Subtitle{MovieName: "Go", SubDownloadsCnt: "1"},
+		Subtitle{MovieName: "Never Let Me Go", SubDownloadsCnt: "2"},
+		Subtitle{MovieName: "Don't Let Me Go", SubDownloadsCnt: "3"},
 	}
 	res := subs.Best()
 	if res == nil {
-		t.Fatalf("Expected Go Subtitle, got: %v", res)
+		t.Fatalf("Expected Subtitle, got: %v", res)
 	}
-	if res.MovieName != "Go" {
-		t.Fatalf("Expected Go, got: %v", res)
+	if res.MovieName != "Don't Let Me Go" {
+		t.Fatalf("Expected Don't Let Me Go, got: %v", res)
 	}
 }
 
