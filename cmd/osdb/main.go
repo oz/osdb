@@ -116,8 +116,7 @@ func imdbShow(id string) error {
 	fmt.Fprintf(w, "Plot:\t%s\n", m.Plot)
 	fmt.Fprintf(w, "Goofs:\t%s\n", m.Goofs)
 	fmt.Fprintf(w, "Trivia:\t%s\n", m.Trivia)
-	w.Flush()
-	return nil
+	return w.Flush()
 }
 
 func main() {
