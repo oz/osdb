@@ -1,8 +1,5 @@
 sudo: false
 language: go
 go:
-  - 1.5
-  - 1.6
+  - 1.7
 script: go test -v ./
-env:
-  - GO15VENDOREXPERIMENT=1
