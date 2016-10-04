@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -67,11 +68,29 @@ type Subtitle struct {
 // Subtitles is a collection of subtitles.
 type Subtitles []Subtitle
 
+// ByDownloads implements sort interface for Subtitles, by download count.
+type ByDownloads Subtitles
+
+func (s ByDownloads) Len() int      { return len(s) }
+func (s ByDownloads) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s ByDownloads) Less(i, j int) bool {
+	iCnt, err := strconv.Atoi(s[i].SubDownloadsCnt)
+	if err != nil {
+		return false
+	}
+	jCnt, err := strconv.Atoi(s[j].SubDownloadsCnt)
+	if err != nil {
+		return true
+	}
+	return iCnt > jCnt
+}
+
 // Best finds the best subsitle in a Subtitles collection. Of course
-// "best" is hardly an absolute concept: here, we just take the first
-// that OSDB returned.
+// "best" is hardly an absolute concept: here, we just take the most
+// downloaded file.
 func (subs Subtitles) Best() *Subtitle {
 	if len(subs) > 0 {
+		sort.Sort(ByDownloads(subs))
 		return &subs[0]
 	}
 	return nil
