@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	_ "github.com/orchestrate-io/dvr"
 )
 
 func ExampleClient_BestMoviesByHashes() {
