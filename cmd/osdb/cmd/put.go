@@ -30,21 +30,29 @@ var putCmd = &cobra.Command{
 		if err := putSubs(client, args[0], args[1]); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
-		fmt.Println("Done!")
 	},
 }
 
-func putSubs(client *osdb.Client, movieFile string, subFile string) error {
+func putSubs(client *osdb.Client, movieFile string, subFile string) (err error) {
 	fmt.Println("- Checking file against OSDB...")
-
-	alreadyInDb, err := client.HasSubtitlesForFiles(movieFile, subFile)
+	subs, err := osdb.NewSubtitles(movieFile, []string{subFile})
 	if err != nil {
-		return err
+		return
+	}
+
+	alreadyInDb, err := client.HasSubtitles(subs)
+	if err != nil {
+		return
 	}
 	if alreadyInDb == true {
-		fmt.Println("These subtitles already exist.")
-	} else {
-		fmt.Println("Uploading new subtitles... once the feature's implemented.")
+		return fmt.Errorf("these subtitles already exist")
 	}
-	return nil
+
+	fmt.Println("- Uploading...")
+	subURL, err := client.UploadSubtitles(subs)
+	if err != nil {
+		return
+	}
+	fmt.Printf("- Subtitles uploaded to %s\n", subURL)
+	return
 }

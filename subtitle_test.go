@@ -29,14 +29,7 @@ func TestBestWithResults(t *testing.T) {
 	}
 }
 
-func TestNewSubtitleWithFile_NoFile(t *testing.T) {
-	s, err := NewSubtitleWithFile("./no_movie_file", "./no_sub_file")
-	if err == nil {
-		t.Fatalf("Expected error, got subtitle: %v", s)
-	}
-}
-
-func TestNewSubtitleWithFile(t *testing.T) {
+func TestNewSubtitle(t *testing.T) {
 	data := make([]byte, ChunkSize*2)
 
 	// Generate dummy movie file
@@ -57,7 +50,7 @@ func TestNewSubtitleWithFile(t *testing.T) {
 	}
 	defer os.Remove("./test-movie.srt")
 
-	s, err := NewSubtitleWithFile("./test-movie.avi", "./test-movie.srt")
+	s, err := NewSubtitle("./test-movie.avi", "./test-movie.srt")
 	if err != nil {
 		t.Fatalf("Expected Subtitle, got error: %v", err)
 	}
