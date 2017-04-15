@@ -5,24 +5,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/oz/osdb"
 	"github.com/spf13/cobra"
-	"gopkg.in/h2non/filetype.v1"
-)
-
-const (
-	// DefaultLang is the default language when searching subtitles.
-	DefaultLang = "ENG"
-)
-
-var (
-	lang = DefaultLang
+	filetype "gopkg.in/h2non/filetype.v1"
 )
 
 func init() {
-	getCmd.Flags().StringVarP(&lang, "lang", "l", getEnvLang(), "Subtitle language")
+	getCmd.Flags().StringVarP(&paramLang, "lang", "l", GetEnvLang(), "Subtitle language")
 	RootCmd.AddCommand(getCmd)
 }
 
@@ -31,8 +21,7 @@ var getCmd = &cobra.Command{
 	Short: "Get subtitles for a file or for all files in a directory.",
 	Long:  `Download subtitles for a file or for all files in a directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		langs := strings.Split(lang, ",")
-		for _, l := range langs {
+		for _, l := range paramLangs {
 			client, err := InitClient(l)
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
@@ -49,17 +38,12 @@ var getCmd = &cobra.Command{
 			for _, file := range args {
 				if err := getSubs(client, file, l); err != nil {
 					fmt.Printf("Error: %s\n", err)
+				} else {
+					return
 				}
 			}
 		}
 	},
-}
-
-func getEnvLang() string {
-	if val, ok := os.LookupEnv("OSDB_LANG"); ok {
-		return val
-	}
-	return DefaultLang
 }
 
 func getSubs(client *osdb.Client, file string, lang string) error {
