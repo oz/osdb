@@ -164,10 +164,10 @@ func (sf *SubtitleFile) Reader() (r io.ReadCloser, err error) {
 // NewSubtitles builds a Subtitles from a movie path and a slice of
 // subtitles paths. Intended to be used with for osdb.HasSubtitles() and
 // osdb.UploadSubtitles().
-func NewSubtitles(moviePath string, subPaths []string) (Subtitles, error) {
+func NewSubtitles(moviePath string, subPaths []string, langID string) (Subtitles, error) {
 	subs := Subtitles{}
 	for _, subPath := range subPaths {
-		sub, err := NewSubtitle(moviePath, subPath)
+		sub, err := NewSubtitle(moviePath, subPath, langID)
 		if err != nil {
 			return nil, err
 		}
@@ -176,13 +176,12 @@ func NewSubtitles(moviePath string, subPaths []string) (Subtitles, error) {
 	return subs, nil
 }
 
-// NewSubtitle builds a Subtitle from a movie and subtitle file path.
-// Intended to be used with for osdb.HasSubtitles() and
-// osdb.UploadSubtitles().
-func NewSubtitle(moviePath string, subPath string) (s Subtitle, err error) {
+// NewSubtitle builds a Subtitle struct.
+func NewSubtitle(moviePath string, subPath string, langID string) (s Subtitle, err error) {
 	s.subFilePath = subPath
+	s.SubLanguageID = langID
 	s.SubFileName = path.Base(subPath)
-	// Compute md5 sum
+	// Subs are identified using md5 hashes... ¬¬
 	subIO, err := os.Open(subPath)
 	if err != nil {
 		return
@@ -228,19 +227,26 @@ func (subs *Subtitles) toTryUploadParams() (map[string]interface{}, error) {
 
 // Serialize Subtitle to OSDB's XMLRPC params when uploading.
 func (subs *Subtitles) toUploadParams() (map[string]interface{}, error) {
-	subMap := map[string]interface{}{}
+	langID := (*subs)[0].SubLanguageID
+	params := map[string]interface{}{}
+
+	params["baseinfo"] = map[string]string{
+		"sublanguageid": langID,
+		// FIXME add "idmovieimdb"
+	}
+
 	for i, s := range *subs {
 		key := "cd" + strconv.Itoa(i+1) // keys are cd1, cd2, ...
-		param := s.toUploadParams()
+		subParam := s.toUploadParams()
 		encoded, err := s.encodeFile()
 		if err != nil {
 			return nil, err
 		}
-		param["subcontent"] = encoded
-		subMap[key] = param
+		subParam["subcontent"] = encoded
+		params[key] = subParam
 	}
 
-	return subMap, nil
+	return params, nil
 }
 
 // Implement io.ReadCloser by wrapping io.Reader

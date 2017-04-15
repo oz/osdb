@@ -50,9 +50,13 @@ func TestNewSubtitle(t *testing.T) {
 	}
 	defer os.Remove("./test-movie.srt")
 
-	s, err := NewSubtitle("./test-movie.avi", "./test-movie.srt")
+	s, err := NewSubtitle("./test-movie.avi", "./test-movie.srt", "TEST")
 	if err != nil {
 		t.Fatalf("Expected Subtitle, got error: %v", err)
+	}
+
+	if s.SubLanguageID != "TEST" {
+		t.Fatalf("Expected SubLanguageID \"TEST\", got %s", s.SubLanguageID)
 	}
 
 	if s.SubFileName != "test-movie.srt" {
