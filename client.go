@@ -309,15 +309,19 @@ func (c *Client) HasSubtitles(subs Subtitles) (bool, error) {
 }
 
 // UploadSubtitles uploads subtitles.
-// mandatory fields in the received Subtitle slice are: SubHash,
-// SubFileName, MovieHash, MovieByteSize, and MovieFileName.
+//
+// XXX Mandatory fields in the received Subtitle slice are: SubHash,
+// SubFileName, MovieHash, SubLanguageID, MovieByteSize, and
+// MovieFileName.
 func (c *Client) UploadSubtitles(subs Subtitles) (string, error) {
-	fmt.Println("Uploading subs")
 	subArgs, err := subs.toUploadParams()
 	if err != nil {
 		return "", err
 	}
+	// XXX WIP
+	// fmt.Println("Upload Params:", subArgs)
 	return "", fmt.Errorf("WIP")
+
 	args := []interface{}{c.Token, subArgs}
 	res := struct {
 		Status string `xmlrpc:"status"`
