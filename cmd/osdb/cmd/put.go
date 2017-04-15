@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
+	putCmd.Flags().StringVarP(&paramLang, "lang", "l", GetEnvLang(), "Subtitle language")
 	RootCmd.AddCommand(putCmd)
 }
 
@@ -23,7 +24,7 @@ var putCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := InitClient(os.Getenv("OSDB_LANG"))
+		client, err := InitClient(paramLangs[0])
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
@@ -34,8 +35,8 @@ var putCmd = &cobra.Command{
 }
 
 func putSubs(client *osdb.Client, movieFile string, subFile string) (err error) {
-	fmt.Println("- Checking file against OSDB...")
-	subs, err := osdb.NewSubtitles(movieFile, []string{subFile})
+	fmt.Println("- Checking subtitle with OSDB...")
+	subs, err := osdb.NewSubtitles(movieFile, []string{subFile}, paramLang)
 	if err != nil {
 		return
 	}
