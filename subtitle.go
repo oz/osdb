@@ -83,15 +83,15 @@ func (s *Subtitle) encodeFile() (string, error) {
 		return "", err
 	}
 	defer fh.Close()
-	dest := bytes.NewBuffer([]byte{})
-	gzWriter := gzip.NewWriter(dest)
-	enc := base64.NewEncoder(base64.StdEncoding, gzWriter)
-	_, err = io.Copy(enc, fh)
+	dest := new(bytes.Buffer)
+	enc := base64.NewEncoder(base64.StdEncoding, dest)
+	gzWriter := gzip.NewWriter(enc)
+	_, err = io.Copy(gzWriter, fh)
 	if err != nil {
 		return "", err
 	}
-	// XXX DEBUG
-	fmt.Println("upload content size:", dest.Len())
+	gzWriter.Flush()
+	gzWriter.Close()
 	return dest.String(), nil
 }
 
