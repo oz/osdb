@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/oz/osdb.svg?branch=master)](https://travis-ci.org/oz/osdb)
+[![Coverage Status](https://coveralls.io/repos/github/oz/osdb/badge.svg)](https://coveralls.io/github/oz/osdb)
 
 This is a Golang client for [Open Subtitles](http://opensubtitles.org/).
 
