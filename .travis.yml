@@ -1,5 +1,8 @@
-sudo: false
 language: go
 go:
-  - 1.8
-script: go test -v ./
+  - tip
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+script:
+  - $HOME/gopath/bin/goveralls -repotoken aaaSPj2AHxZ4LCSx6RFLatv3PQgSwYYQi
