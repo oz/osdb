@@ -51,7 +51,7 @@ type Movie struct {
 	Cast           map[string]string `xmlrpc:"cast"`
 	Directors      map[string]string `xmlrpc:"directors"`
 	Writers        map[string]string `xmlrpc:"writers"`
-	Awards         string            `xmlrpc:"awards"`
+	Awards         []string          `xmlrpc:"awards"`
 	Genres         []string          `xmlrpc:"genres"`
 	Countries      []string          `xmlrpc:"country"`
 	Languages      []string          `xmlrpc:"language"`

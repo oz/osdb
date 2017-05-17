@@ -80,6 +80,33 @@ func ExampleClient_IMDBSearchByID() {
 	// 403358: Night.Watch.2004.720p.BluRay.x264-SiNNERS.srt
 }
 
+func ExampleClient_GetIMDBMovieDetails() {
+	c, err := NewClient()
+	if err != nil {
+		fmt.Printf("can't create client: %s\n", err)
+		return
+	}
+
+	err = c.LogIn("", "", "")
+	if err != nil {
+		fmt.Printf("can't login: %s\n", err)
+		return
+	}
+
+	id := "0403358"
+
+	time.Sleep(1 * time.Second)
+	movie, err := c.GetIMDBMovieDetails(id)
+	if err != nil {
+		fmt.Printf("can't get details: %s\n", err)
+		return
+	}
+	fmt.Printf("%s: %s - id %s - awards '%s'\n", id, movie.Title, movie.ID, movie.Awards[0])
+
+	// Output:
+	// 0403358: Nochnoy dozor - id 0403358 - awards '2 wins & 5 nominations.'
+}
+
 func TestIMDBSearchByIDManyTimes(t *testing.T) {
 	c, err := NewClient()
 	if err != nil {
