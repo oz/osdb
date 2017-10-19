@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/oz/osdb"
 	"github.com/spf13/cobra"
+	"gopkg.in/h2non/filetype.v1"
 )
 
 const (
@@ -25,9 +27,9 @@ func init() {
 }
 
 var getCmd = &cobra.Command{
-	Use:   "get [file]",
-	Short: "Get subtitles for a file",
-	Long:  `Download subtitles for a file.`,
+	Use:   "get [file/directory]",
+	Short: "Get subtitles for a file or for all files in a directory.",
+	Long:  `Download subtitles for a file or for all files in a directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		langs := strings.Split(lang, ",")
 		for _, l := range langs {
@@ -35,12 +37,18 @@ var getCmd = &cobra.Command{
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
 			}
-
+			if len(args) == 1 {
+				x, err := os.Stat(args[0])
+				if err != nil {
+					fmt.Printf("Error: %s\n", err)
+					break
+				} else if x.IsDir() {
+					args = getFilesFromPath(args[0])
+				}
+			}
 			for _, file := range args {
 				if err := getSubs(client, file, l); err != nil {
 					fmt.Printf("Error: %s\n", err)
-				} else {
-					break
 				}
 			}
 		}
@@ -70,4 +78,17 @@ func getSubs(client *osdb.Client, file string, lang string) error {
 
 	fmt.Println("- No subtitles found!")
 	return nil
+}
+
+func getFilesFromPath(dir string) []string {
+	files := []string{}
+	entries, _ := ioutil.ReadDir(dir)
+	for _, e := range entries {
+		file := path.Join(dir, e.Name())
+		buf, _ := ioutil.ReadFile(file)
+		if filetype.IsVideo(buf) {
+			files = append(files, file)
+		}
+	}
+	return files
 }
