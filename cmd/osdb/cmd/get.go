@@ -7,9 +7,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/h2non/filetype"
 	"github.com/oz/osdb"
 	"github.com/spf13/cobra"
-	filetype "gopkg.in/h2non/filetype.v1"
 )
 
 var NoSub = errors.New("No subtitles found!")

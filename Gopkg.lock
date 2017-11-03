@@ -2,10 +2,16 @@
 
 
 [[projects]]
-  branch = "master"
+  name = "github.com/h2non/filetype"
+  packages = ["."]
+  revision = "22e255079ab40241c671d457081831d972f0436b"
+  version = "v1.0.3"
+
+[[projects]]
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
 
 [[projects]]
   branch = "master"
@@ -17,23 +23,29 @@
   branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "5deb57bbca49eb370538fc295ba4b2988f9f5e09"
+  revision = "b3426bbac13d7110c4d8fce456ea0012f79f3b8b"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "9a906f17374922ed0f74e1b2f593d3723f2ffb00"
+  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
-  revision = "06d6eba81293389cafdff7fca90d75592194b2d9"
+  revision = "88f656faf3f37f690df1a32515b479415e1a6769"
+
+[[projects]]
+  name = "gopkg.in/h2non/filetype.v1"
+  packages = ["matchers","types"]
+  revision = "22e255079ab40241c671d457081831d972f0436b"
+  version = "v1.0.3"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e71553eaf09eddcf0881d9fb4c899995291efe606001e0ff6e7eb70a352635f0"
+  inputs-digest = "30b0adf51d894edbe0916424f2deee259799752624620252e13f4b7350c3bf9c"
   solver-name = "gps-cdcl"
   solver-version = 1
