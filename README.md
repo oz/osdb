@@ -1,19 +1,21 @@
 [![Build Status](https://travis-ci.org/oz/osdb.svg?branch=master)](https://travis-ci.org/oz/osdb)
 [![Coverage Status](https://coveralls.io/repos/github/oz/osdb/badge.svg)](https://coveralls.io/github/oz/osdb)
 
-This is a Golang client for [Open Subtitles](http://opensubtitles.org/).
+A Go client for [OpenSubtitles](http://opensubtitles.org/).
 
-This project allows you to search and download subtitles from Open
-Subtitles. If you are only interested in searching or downloading then
-you should find what you need from the latest releases, otherwise the
-[TODO](https://github.com/oz/osdb#todo) section highlights what
-remains to be done regarding API coverage.
+This project allows you to search and download subtitles from OpenSubtitles. It
+comes both as a command-line program, and a library that you can use from other
+programs.
+
+If you need to search or download subtitles, then you should find what you need
+from the latest releases, otherwise the [TODO](https://github.com/oz/osdb#todo)
+section highlights what remains to be done regarding API coverage.
 
 
 # Installation
 
-If you need (yet another) CLI interface for Open Subtitles, then
-install the latest [Go](http://golang.org) release, and run:
+If you want to compile the CLI interface for OpenSubtitles, then install the
+latest [Go](http://golang.org) release, and run:
 
 ```
 go get github.com/oz/osdb && go install github.com/oz/osdb/cmd/osdb
@@ -23,20 +25,28 @@ Provided that you setup your Go environment correctly, you now have a basic
 `osdb` command to interact with OpenSubtitles' API.
 
 ```
-$ osdb --help
+$ osdb help
+Search and download subtitles from the command-line.
+
 Usage:
-    osdb get [--lang=<lang>] <file>
-    osdb (put|upload) <movie_file> <sub_file>
-    osdb imdb <query>...
-    osdb imdb show <movie id>
-    osdb -h | --help
-    osdb --version
+  osdb
+  osdb [command]
+
+Available Commands:
+  get         Get subtitles for a file
+  hash        Shows OSDB hash for file.
+  help        Help about any command
+  imdb        Search IMDB
+  put         Upload subtitles for a file
+  version     Print the version number of osdb
+
+Use "osdb [command] --help" for more information about a command.
 ```
 
-Hence, to download French or English subtitles for a sample file:
+Hence, to download French subtitles for a sample file:
 
 ```
-$ osdb get --lang fra,eng sample.avi
+$ osdb get -l fra sample.avi
 - Getting fra subtitles for file: sample.avi
 - No subtitles found!
 - Getting eng subtitles for file: sample.avi

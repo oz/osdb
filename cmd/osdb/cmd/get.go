@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	filetype "gopkg.in/h2non/filetype.v1"
 )
+
+var NoSub = errors.New("No subtitles found!")
 
 func init() {
 	getCmd.Flags().StringVarP(&paramLang, "lang", "l", GetEnvLang(), "Subtitle language")
@@ -37,7 +40,12 @@ var getCmd = &cobra.Command{
 			}
 			for _, file := range args {
 				if err := getSubs(client, file, l); err != nil {
-					fmt.Printf("Error: %s\n", err)
+					if err != NoSub {
+						fmt.Printf("Error: %s\n", err)
+						return
+					}
+					fmt.Println(err)
+					continue
 				} else {
 					return
 				}
@@ -59,9 +67,7 @@ func getSubs(client *osdb.Client, file string, lang string) error {
 		// XXX check if dest exists instead of overwriting?
 		return client.DownloadTo(best, dest)
 	}
-
-	fmt.Println("- No subtitles found!")
-	return nil
+	return NoSub
 }
 
 func getFilesFromPath(dir string) []string {
