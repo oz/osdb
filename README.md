@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/oz/osdb.svg?branch=master)](https://travis-ci.org/oz/osdb)
 [![Coverage Status](https://coveralls.io/repos/github/oz/osdb/badge.svg)](https://coveralls.io/github/oz/osdb)
+[![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/oz/donate)
 
 A Go client for [OpenSubtitles](http://opensubtitles.org/).
 
