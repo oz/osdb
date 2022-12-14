@@ -1,6 +1,7 @@
 package osdb
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -95,6 +96,56 @@ func (c *Client) IMDBSearchByID(ids []string, langs []string) (Subtitles, error)
 		)
 	}
 
+	return c.SearchSubtitles(&params)
+}
+
+// IMDBSearchByIDFiltered Searches for a movie or tv episode by IMDB code. Set isMovie to true to ignore the season and episode
+// otherwise the search try to find a subtitle that matches the season and episode supplied. Note: When looking for Episodes by the
+// Series IMDB code, if you don't filter by episode/season - the result might include too many subtitles to return and thus
+// some results will be ommited.
+func (c *Client) IMDBSearchByIDFiltered(imdbCode string, isMovie bool, season uint, episode uint, lang []string) (Subtitles, error) {
+	if !isMovie {
+		params := []interface{}{
+			c.Token,
+			[]struct {
+				Imdbid        string `xmlrpc:"imdbid"`
+				Sublanguageid string `xmlrpc:"sublanguageid"`
+				Season        int64  `xmlrpc:"season"`
+				Episode       int64  `xmlrpc:"episode"`
+			}{{
+				imdbCode,
+				strings.Join(lang, ","),
+				int64(season),
+				int64(episode),
+			}},
+		}
+		return c.SearchSubtitles(&params)
+	} else {
+		return c.IMDBSearchByID([]string{imdbCode}, lang)
+	}
+}
+
+// HashSearch Searches for subtitles that match a specific hash/size/language combination.
+// This function does not require the path of the movie file, just the hash/size values.
+func (c *Client) HashSearch(hash uint64, size int64, langs []string) (Subtitles, error) {
+	if hash == 0 || size == 0 {
+		return nil, errors.New("called OS search by Hash with no hash value")
+	}
+	if size < 15000 {
+		return nil, errors.New("called OS search by Hash with a small file")
+	}
+	params := []interface{}{
+		c.Token,
+		[]struct {
+			Hash  string `xmlrpc:"moviehash"`
+			Size  int64  `xmlrpc:"moviebytesize"`
+			Langs string `xmlrpc:"sublanguageid"`
+		}{{
+			fmt.Sprintf("%016x", hash),
+			size,
+			strings.Join(langs, ","),
+		}},
+	}
 	return c.SearchSubtitles(&params)
 }
 
@@ -421,6 +472,11 @@ func hashString(hash uint64) string {
 
 // Tries to guess the character encoding by its name
 // (or whatever Opensubtitles thinks its name is)
+// if Opensubtitles encoding is not well formatted (common) utf-8 is used as a fallback
 func encodingFromName(name string) (encoding.Encoding, error) {
-	return htmlindex.Get(name)
+	result, e := htmlindex.Get(name)
+	if e != nil {
+		return htmlindex.Get("utf-8")
+	}
+	return result, e
 }
