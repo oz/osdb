@@ -474,7 +474,9 @@ func hashString(hash uint64) string {
 // (or whatever Opensubtitles thinks its name is)
 // if Opensubtitles encoding is not well formatted (common) utf-8 is used as a fallback
 func encodingFromName(name string) (encoding.Encoding, error) {
-	result,e:=return htmlindex.Get(name)
-	if e!=nil{  return htmlindex.Get("utf-8") }
-	return result,e
+	result, e := htmlindex.Get(name)
+	if e != nil {
+		return htmlindex.Get("utf-8")
+	}
+	return result, e
 }
